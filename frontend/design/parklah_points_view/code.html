@@ -1,0 +1,318 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Token Balance</title>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary": "#713d10",
+                "secondary-fixed": "#adedf7",
+                "on-tertiary": "#ffffff",
+                "surface-container-low": "#f1f4f4",
+                "on-error": "#ffffff",
+                "on-tertiary-fixed": "#301400",
+                "on-secondary-container": "#2b6d76",
+                "on-tertiary-fixed-variant": "#6d390c",
+                "primary-fixed": "#9ff0fb",
+                "surface-dim": "#d7dadb",
+                "secondary": "#23676f",
+                "inverse-primary": "#82d3de",
+                "on-secondary-fixed-variant": "#004f56",
+                "on-primary-container": "#9becf7",
+                "primary-fixed-dim": "#82d3de",
+                "on-primary": "#ffffff",
+                "primary": "#00535b",
+                "on-error-container": "#93000a",
+                "on-primary-fixed": "#001f23",
+                "on-surface-variant": "#3e494a",
+                "outline": "#6f797a",
+                "on-secondary-fixed": "#001f23",
+                "surface-bright": "#f7fafa",
+                "surface-variant": "#e0e3e3",
+                "action-blue": "#007bff",
+                "on-secondary": "#ffffff",
+                "tertiary-fixed-dim": "#ffb783",
+                "outline-variant": "#bec8ca",
+                "secondary-container": "#adedf7",
+                "error-container": "#ffdad6",
+                "inverse-surface": "#2d3132",
+                "surface-ice": "#f2fbfe",
+                "surface-tint": "#006972",
+                "surface-container": "#ebeeef",
+                "secondary-fixed-dim": "#91d1da",
+                "on-primary-fixed-variant": "#004f56",
+                "error": "#ba1a1a",
+                "star-gold": "#ffb400",
+                "surface-container-highest": "#e0e3e3",
+                "surface": "#f7fafa",
+                "background": "#f7fafa",
+                "primary-container": "#006d77",
+                "on-surface": "#181c1d",
+                "inverse-on-surface": "#eef1f2",
+                "on-tertiary-container": "#ffd7bd",
+                "surface-container-high": "#e6e9e9",
+                "on-background": "#181c1d",
+                "tertiary-container": "#8e5426",
+                "surface-container-lowest": "#ffffff",
+                "tertiary-fixed": "#ffdcc5"
+        },
+        "borderRadius": {
+                "DEFAULT": "1rem",
+                "lg": "2rem",
+                "xl": "3rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-sm": "8px",
+                "stack-md": "16px",
+                "margin-mobile": "20px",
+                "gutter": "16px",
+                "nav-height": "72px",
+                "stack-lg": "24px"
+        },
+        "fontFamily": {
+                "label-sm": [
+                        "Lexend"
+                ],
+                "label-lg": [
+                        "Lexend"
+                ],
+                "headline-lg": [
+                        "Lexend"
+                ],
+                "headline-md": [
+                        "Lexend"
+                ],
+                "label-md": [
+                        "Lexend"
+                ],
+                "headline-lg-mobile": [
+                        "Lexend"
+                ],
+                "body-lg": [
+                        "Lexend"
+                ],
+                "headline-sm": [
+                        "Lexend"
+                ],
+                "body-md": [
+                        "Lexend"
+                ]
+        },
+        "fontSize": {
+                "label-sm": [
+                        "10px",
+                        {
+                                "lineHeight": "14px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "label-lg": [
+                        "14px",
+                        {
+                                "lineHeight": "18px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-md": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-sm": [
+                        "18px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased pb-[104px] min-h-screen flex flex-col"><header class="md:hidden flex py-stack-md w-full bg-background border-surface-variant px-margin-mobile justify-between">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">ParkLah</h1>
+<button class="text-primary hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span></button></header>
+<!-- Top App Bar -->
+<header class="hidden md:flex justify-between items-center px-margin-mobile py-stack-md w-full bg-background docked full-width top-0 text-primary">
+<div class="flex items-center gap-stack-sm">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A small, professional user profile photo. The user is a young professional standing in a modern, brightly lit urban setting. The overall style is clean and corporate modern, with soft teal accents in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgjZIgELxgVoDlYujB4789Hc9Orsj2bUG3PBbVimeCjSclqqQRu3GmVgRoRd4PCfCLJSB38PEGRgEbDs_QFY7KYK-NJHVhCadpvHcXxMLuLuXVw_uJmdo6IarRZVStRJQ0VJu0tmA_thS6rqWd1WMdqpkdo45f-Neql6hD29sCafEU62bXJC44GSSPNdM6oj3ZpYiB-M9931UAMwyhziHGRnUmyvd6ofmHHX3nKCWDaJKiga4ValHm">
+</div>
+<div class="font-headline-md text-headline-md font-bold text-primary">SpotSwap</div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-primary cursor-pointer hover:opacity-80 transition-opacity">notifications</span>
+</div>
+</header>
+<main class="flex-grow px-margin-mobile pt-stack-lg max-w-4xl mx-auto w-full">
+<!-- Balance Card -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,109,119,0.05)] p-stack-md flex flex-col items-center justify-center relative overflow-hidden mb-stack-lg">
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary-container rounded-full opacity-20"></div>
+<div class="absolute -left-10 -bottom-10 w-24 h-24 bg-primary-container rounded-full opacity-10"></div>
+<h2 class="font-label-md text-label-md text-on-surface-variant mb-stack-sm relative z-10 uppercase tracking-wider">Current Balance</h2>
+<div class="flex items-end gap-stack-sm mb-stack-sm relative z-10">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: &quot;FILL&quot; 1;">monetization_on</span>
+<span class="font-headline-lg text-headline-lg text-primary-container">450</span>
+<span class="font-body-lg text-body-lg text-on-surface-variant pb-1">Tokens</span>
+</div>
+<button class="bg-primary-container text-on-primary hover:opacity-90 transition-opacity rounded-full py-2 px-6 font-label-md text-label-md shadow-md relative z-10" style="background-color: rgb(131, 197, 190); color: rgb(0, 77, 84);">
+                Buy More Tokens
+            </button>
+</section>
+<!-- Earn More Section -->
+<section class="mb-stack-lg">
+<h3 class="font-headline-sm text-headline-sm text-on-background mb-stack-sm">Ways to Earn</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-sm">
+<!-- Earn Card 1 -->
+<div class="bg-surface-container-lowest rounded-lg shadow-[0px_4px_20px_rgba(0,109,119,0.05)] p-stack-md flex items-center gap-stack-md hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined">share_location</span>
+</div>
+<div class="flex-grow">
+<h4 class="font-label-md text-label-md text-on-background">Share a Spot</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs">Earn 50 tokens for every spot shared.</p>
+</div>
+<span class="material-symbols-outlined text-primary">arrow_forward_ios</span>
+</div>
+<!-- Earn Card 2 -->
+<div class="bg-surface-container-lowest rounded-lg shadow-[0px_4px_20px_rgba(0,109,119,0.05)] p-stack-md flex items-center gap-stack-md hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container">
+<span class="material-symbols-outlined">person_add</span>
+</div>
+<div class="flex-grow">
+<h4 class="font-label-md text-label-md text-on-background">Invite Friends</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs">Get 100 tokens when they sign up.</p>
+</div>
+<span class="material-symbols-outlined text-primary">arrow_forward_ios</span>
+</div>
+</div>
+</section>
+<!-- Transaction History -->
+<section>
+<div class="flex justify-between items-center mb-stack-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-background">Recent Activity</h3>
+<span class="font-label-md text-label-md text-primary cursor-pointer hover:underline">View All</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,109,119,0.05)] overflow-hidden">
+<!-- Transaction Item -->
+<div class="flex items-center justify-between p-stack-md border-b border-surface-variant">
+<div class="flex items-center gap-stack-sm">
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined text-sm">local_parking</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-background">Downtown Garage</div>
+<div class="font-body-md text-body-md text-on-surface-variant text-[10px]">Today, 2:30 PM</div>
+</div>
+</div>
+<div class="font-label-md text-label-md text-error">- 15 Tokens</div>
+</div>
+<!-- Transaction Item -->
+<div class="flex items-center justify-between p-stack-md border-b border-surface-variant">
+<div class="flex items-center gap-stack-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-background">Top Up</div>
+<div class="font-body-md text-body-md text-on-surface-variant text-[10px]">Yesterday, 10:00 AM</div>
+</div>
+</div>
+<div class="font-label-md text-label-md text-secondary">+ 200 Tokens</div>
+</div>
+<!-- Transaction Item -->
+<div class="flex items-center justify-between p-stack-md">
+<div class="flex items-center gap-stack-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-sm">share_location</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-background">Shared Driveway</div>
+<div class="font-body-md text-body-md text-on-surface-variant text-[10px]">Oct 24, 6:00 PM</div>
+</div>
+</div>
+<div class="font-label-md text-label-md text-secondary">+ 50 Tokens</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<div class="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] bg-surface-container-lowest shadow-[0_8px_32px_rgba(0,109,119,0.12)] rounded-full px-6 py-4 flex justify-between items-center z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors gap-1" href="#">
+<span class="material-symbols-outlined text-2xl">exit_to_app</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors gap-1" href="#">
+<span class="material-symbols-outlined text-2xl">search_check</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-full w-12 h-12 shadow-lg transition-transform hover:scale-105" href="#" style="background-color: rgb(131, 197, 190); color: rgb(0, 77, 84);">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1, &quot;wght&quot; 400;">account_balance_wallet</span>
+</a>
+</div>
+
+
+
+
+
+
+
+
+
+
+</body></html>
