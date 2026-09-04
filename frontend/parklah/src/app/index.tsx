@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,16 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Theme } from '@/constants/theme';
 import { GoogleIcon, FacebookIcon } from '@/components/SocialIcons';
+import { oauthService } from '@/services/OAuthService';
+
+import * as Linking from 'expo-linking';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -21,9 +25,58 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  useEffect(() => {
+    // 1. Web callback
+    oauthService.checkWebHashCallback().then((result) => {
+      if (result) {
+        router.replace('/selection');
+      }
+    }).catch(console.error);
+
+    // 2. Mobile cold-start deep link callback
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        oauthService.handleDeepLinkUrl(url).then((res) => {
+          if (res) router.replace('/selection');
+        }).catch(console.error);
+      }
+    });
+
+    // 3. Mobile active deep link listener (returning from Chrome / browser)
+    const subscription = Linking.addEventListener('url', async ({ url }) => {
+      try {
+        const res = await oauthService.handleDeepLinkUrl(url);
+        if (res) {
+          router.replace('/selection');
+        }
+      } catch (e: any) {
+        console.warn('Deep link login handler error:', e.message);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   const handleLogin = () => {
     // Navigate to Selection / Main flow
     router.replace('/selection');
+  };
+
+  const handleSocialLogin = async (provider: 'GOOGLE' | 'FACEBOOK') => {
+    try {
+      const res = await oauthService.signInWithProvider(provider);
+      if (res && res.tokens) {
+        router.replace('/selection');
+      }
+    } catch (e: any) {
+      console.warn('OAuth sign in error:', e.message);
+      Alert.alert(
+        `${provider === 'GOOGLE' ? 'Google' : 'Facebook'} Sign-In Failed`,
+        e.message || 'Authentication could not be completed.',
+      );
+    }
   };
 
   return (
@@ -125,7 +178,7 @@ export default function LoginScreen() {
             <View style={styles.socialContainer}>
               <TouchableOpacity
                 style={styles.socialButton}
-                onPress={handleLogin}
+                onPress={() => handleSocialLogin('GOOGLE')}
                 activeOpacity={0.75}
               >
                 <GoogleIcon size={20} />
@@ -134,7 +187,7 @@ export default function LoginScreen() {
 
               <TouchableOpacity
                 style={styles.socialButton}
-                onPress={handleLogin}
+                onPress={() => handleSocialLogin('FACEBOOK')}
                 activeOpacity={0.75}
               >
                 <FacebookIcon size={20} />

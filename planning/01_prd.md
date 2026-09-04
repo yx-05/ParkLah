@@ -120,6 +120,10 @@ sequenceDiagram
   - **Threshold:** Searcher must have an Estimated Travel Time (ETA) $\le 10\text{ minutes}$ AND distance $\le 3.0\text{ km}$ from destination.
   - If beyond the threshold, app displays a travel route on the map and automatically unlocks the "Matchmaking" state when the user crosses the geofence threshold.
 - **FR-2.3 Active Search Screen:** Clean map interface showing Searcher's live position, destination pin, search radius circle, and real-time status pulses.
+- **FR-2.4 Route Polyline & External Navigation Support:**
+  - **In-App Polyline Rendering:** Displays a real-time turn-by-turn road route on the map (`react-native-maps-directions`) from the Searcher's live GPS to the destination / matched parking stall.
+  - **Dynamic Rerouting:** Automatically recalculates and snaps the navigation path directly to the Leaver's exact parking stall coordinates upon matchmaking confirmation.
+  - **External App Quick-Launch (Optional):** Provides a 1-tap shortcut for Searchers to launch the target coordinates in **Waze**, **Google Maps**, or **Apple Maps** for full voice-guided navigation while ParkLah operates in the background to handle geofenced arrival verification.
 
 ---
 
@@ -225,7 +229,7 @@ graph TB
     end
 
     subgraph API & Gateway Layer
-        API[Node.js / Express or NestJS]
+        API[Node.js / NestJS]
         WS[Socket.io WebSocket Gateway]
         AUTH[JWT / Firebase Auth]
     end
@@ -264,12 +268,13 @@ graph TB
 | **State Management** | `zustand` + `@tanstack/react-query` | Global app state & server cache synchronization |
 | **Real-time Client** | `socket.io-client` | Live P2P matching notifications, driver ETA, chat |
 | **Secure Storage** | `expo-secure-store` | Encrypted JWT token and authentication storage |
+| **External Nav Linking** | `react-native-map-link` / Deep Linking | 1-tap shortcut to launch destination in Waze, Google Maps, or Apple Maps |
 
 ### 5.2 Backend API & Real-time Services
 | Component | Technology | Purpose |
 | :--- | :--- | :--- |
 | **Runtime & Language** | **Node.js (v20+ LTS) with TypeScript** | High-performance asynchronous API services |
-| **Framework** | **NestJS or Express.js** | Modular REST API routing and middleware |
+| **Framework** | **NestJS** | Modular, enterprise TypeScript REST API architecture, Dependency Injection, and middleware |
 | **Real-Time Engine** | **Socket.io + Redis Adapter** | Scalable bi-directional WebSocket communication |
 | **Spatial Database** | **PostgreSQL (v16+) with PostGIS (v3.4+)** | Geospatial queries (`ST_DWithin`, `ST_Distance_Sphere`, spatial indexing) |
 | **In-Memory Store & Cache** | **Redis (v7.x)** | Real-time queue, geospatial indexing (`GEOADD`/`GEORADIUS`), spot TTL |

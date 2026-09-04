@@ -15,6 +15,11 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
+    'Lexend': Lexend_400Regular,
+    'Lexend-Regular': Lexend_400Regular,
+    'Lexend-Medium': Lexend_500Medium,
+    'Lexend-SemiBold': Lexend_600SemiBold,
+    'Lexend-Bold': Lexend_700Bold,
     Lexend_400Regular,
     Lexend_500Medium,
     Lexend_600SemiBold,

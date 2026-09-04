@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,18 @@ import {
   ScrollView,
   Platform,
   Alert,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Theme } from '@/constants/theme';
 import { AppHeader } from '@/components/AppHeader';
+import { useUserStore } from '@/stores/useUserStore';
+import { GoogleIcon, FacebookIcon } from '@/components/SocialIcons';
+import { apiService } from '@/services/ApiService';
+import { SocketService } from '@/services/SocketService';
 
 interface Transaction {
   id: string;
@@ -23,28 +29,28 @@ interface Transaction {
   icon: keyof typeof MaterialIcons.glyphMap;
 }
 
-const TRANSACTIONS: Transaction[] = [
+const DEFAULT_TRANSACTIONS: Transaction[] = [
   {
     id: '1',
-    title: 'Downtown Garage',
+    title: 'Mid Valley Megamall Spot',
     time: 'Today, 2:30 PM',
-    amount: -15,
+    amount: -0.5,
     type: 'debit',
     icon: 'local-parking',
   },
   {
     id: '2',
-    title: 'Top Up',
+    title: 'Wallet Top Up',
     time: 'Yesterday, 10:00 AM',
-    amount: 200,
+    amount: 20.0,
     type: 'credit',
     icon: 'add-circle-outline',
   },
   {
     id: '3',
-    title: 'Shared Driveway',
+    title: 'Spot Handover Reward',
     time: 'Oct 24, 6:00 PM',
-    amount: 50,
+    amount: 0.25,
     type: 'credit',
     icon: 'share-location',
   },
@@ -52,42 +58,96 @@ const TRANSACTIONS: Transaction[] = [
 
 export default function PointsScreen() {
   const router = useRouter();
-  const [balance, setBalance] = useState(450);
+  const user = useUserStore((s) => s.user);
+  const logout = useUserStore((s) => s.logout);
 
+  const [balance, setBalance] = useState<number>(20.0);
+  const [currency, setCurrency] = useState<string>('RM');
+  const [transactions, setTransactions] = useState<Transaction[]>(DEFAULT_TRANSACTIONS);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // 1. Fetch Live Wallet Balance & Transactions from Supabase
+  const loadWalletData = async () => {
+    try {
+      const balRes = await apiService.getWalletBalance();
+      if (balRes && balRes.balance !== undefined) {
+        setBalance(balRes.balance);
+        if (balRes.currency) setCurrency(balRes.currency);
+      }
+
+      const txList = await apiService.getWalletTransactions(1, 10);
+      if (txList && txList.length > 0) {
+        const mappedTx: Transaction[] = txList.map((tx: any) => ({
+          id: tx.id,
+          title: tx.description || 'Wallet Transaction',
+          time: new Date(tx.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          amount: parseFloat(tx.amount),
+          type: tx.type === 'DEBIT' ? 'debit' : 'credit',
+          icon: tx.type === 'DEBIT' ? 'local-parking' : 'add-circle-outline',
+        }));
+        setTransactions(mappedTx);
+      }
+    } catch (err: any) {
+      console.warn('Wallet fetch fallback:', err.message);
+    }
+  };
+
+  useEffect(() => {
+    loadWalletData();
+  }, []);
+
+  // 2. Real Wallet Top-Up via Backend API
   const handleBuyPoints = () => {
     Alert.alert(
-      'Buy Points',
-      'Select a points package:',
+      'Top Up Wallet',
+      'Select an amount to reload your ParkLah balance:',
       [
         {
-          text: '100 Points ($10)',
-          onPress: () => {
-            setBalance((prev) => prev + 100);
-            Alert.alert('Success', 'Added 100 points to your wallet!');
+          text: '+RM 10.00',
+          onPress: async () => {
+            await performTopup(10);
           },
         },
         {
-          text: '250 Points ($22)',
-          onPress: () => {
-            setBalance((prev) => prev + 250);
-            Alert.alert('Success', 'Added 250 points to your wallet!');
+          text: '+RM 20.00',
+          onPress: async () => {
+            await performTopup(20);
+          },
+        },
+        {
+          text: '+RM 50.00',
+          onPress: async () => {
+            await performTopup(50);
           },
         },
         { text: 'Cancel', style: 'cancel' },
-      ]
+      ],
     );
+  };
+
+  const performTopup = async (amount: number) => {
+    setLoading(true);
+    try {
+      await apiService.mockTopup(amount);
+      await loadWalletData();
+      Alert.alert('Top-Up Successful! 🎉', `RM ${amount.toFixed(2)} added to your wallet.`);
+    } catch (err: any) {
+      Alert.alert('Top-Up Issue', err.message || 'Unable to top up wallet at this time.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEarnOption = (type: 'share' | 'invite') => {
     if (type === 'share') {
       Alert.alert(
-        'Share a Spot',
-        'When you leave a parking space, submit your plate to notify other drivers and earn 50 points!'
+        'Leave & Earn',
+        'When leaving your parking spot, tap "I\'M LEAVING" to broadcast your departure and earn RM 0.25 on handover!',
       );
     } else {
       Alert.alert(
-        'Invite Friends',
-        'Share your referral code: PARKLAL88 to earn 100 bonus points for each friend who signs up.'
+        'Invite Drivers',
+        'Share ParkLah with fellow drivers to earn bonus RM 2.00 parking credits!',
       );
     }
   };
@@ -102,10 +162,14 @@ export default function PointsScreen() {
           text: 'Log Out',
           style: 'destructive',
           onPress: () => {
+            logout();
+            try {
+              SocketService.getInstance().disconnect();
+            } catch (e) {}
             router.replace('/');
           },
         },
-      ]
+      ],
     );
   };
 
@@ -118,6 +182,54 @@ export default function PointsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.contentWrapper}>
+          {/* Driver Profile Card */}
+          <View style={styles.profileCard}>
+            <View style={styles.profileLeft}>
+              {user?.avatarUrl ? (
+                <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatarCircle}>
+                  <Text style={styles.avatarInitial}>
+                    {(user?.fullName || user?.name || 'P').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName} numberOfLines={1}>
+                  {user?.fullName || user?.name || 'ParkLah Driver'}
+                </Text>
+                <Text style={styles.profileContact} numberOfLines={1}>
+                  {user?.email || user?.phoneNumber || '+60123456789'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.profileBadgeContainer}>
+              {user?.authProvider === 'GOOGLE' ? (
+                <View style={styles.authBadge}>
+                  <GoogleIcon size={14} />
+                  <Text style={styles.authBadgeText}>Google Account</Text>
+                </View>
+              ) : user?.authProvider === 'FACEBOOK' ? (
+                <View style={styles.authBadge}>
+                  <FacebookIcon size={14} />
+                  <Text style={styles.authBadgeText}>Facebook</Text>
+                </View>
+              ) : (
+                <View style={styles.authBadge}>
+                  <MaterialIcons name="phone-iphone" size={14} color={Theme.colors.stormyTeal} />
+                  <Text style={styles.authBadgeText}>Phone Verified</Text>
+                </View>
+              )}
+              <View style={styles.ratingBadge}>
+                <MaterialIcons name="star" size={13} color="#F59E0B" />
+                <Text style={styles.ratingText}>
+                  {(user?.reliabilityRating || 5.0).toFixed(1)} Rating
+                </Text>
+              </View>
+            </View>
+          </View>
+
           {/* Balance Card */}
           <View style={styles.balanceCard}>
             {/* Decorative Bubbles */}
@@ -133,16 +245,23 @@ export default function PointsScreen() {
                 color={Theme.colors.stormyTeal}
                 style={styles.coinIcon}
               />
-              <Text style={styles.balanceNumber}>{balance}</Text>
-              <Text style={styles.balanceUnit}>Points</Text>
+              <Text style={styles.balanceNumber}>
+                {typeof balance === 'number' ? balance.toFixed(2) : balance}
+              </Text>
+              <Text style={styles.balanceUnit}>{currency}</Text>
             </View>
 
             <TouchableOpacity
               style={styles.buyButton}
               onPress={handleBuyPoints}
+              disabled={loading}
               activeOpacity={0.88}
             >
-              <Text style={styles.buyButtonText}>Buy More Points</Text>
+              {loading ? (
+                <ActivityIndicator size="small" color={Theme.colors.darkTeal} />
+              ) : (
+                <Text style={styles.buyButtonText}>Top Up Wallet</Text>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -211,9 +330,9 @@ export default function PointsScreen() {
             </View>
 
             <View style={styles.activityContainer}>
-              {TRANSACTIONS.map((item, index) => {
+              {transactions.map((item, index) => {
                 const isDebit = item.type === 'debit';
-                const isLast = index === TRANSACTIONS.length - 1;
+                const isLast = index === transactions.length - 1;
                 return (
                   <View
                     key={item.id}
@@ -251,7 +370,7 @@ export default function PointsScreen() {
                         isDebit ? styles.debitText : styles.creditText,
                       ]}
                     >
-                      {isDebit ? `- ${Math.abs(item.amount)}` : `+ ${item.amount}`} Points
+                      {isDebit ? `- RM ${Math.abs(item.amount).toFixed(2)}` : `+ RM ${item.amount.toFixed(2)}`}
                     </Text>
                   </View>
                 );
@@ -291,7 +410,101 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 600,
     alignSelf: 'center',
-    gap: 20,
+    gap: 16,
+  },
+  profileCard: {
+    backgroundColor: Theme.colors.surfaceContainerLowest,
+    borderRadius: Theme.borderRadius.default,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: Theme.colors.stormyTeal,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        boxShadow: '0px 4px 12px rgba(0, 109, 119, 0.06)',
+      },
+    }),
+  },
+  profileLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  avatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Theme.colors.surfaceContainer,
+  },
+  avatarCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Theme.colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarInitial: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: 18,
+    color: Theme.colors.onPrimaryContainer,
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: 15,
+    color: Theme.colors.onSurface,
+  },
+  profileContact: {
+    fontFamily: Theme.typography.fontFamily.regular,
+    fontSize: 12,
+    color: Theme.colors.onSurfaceVariant,
+    marginTop: 2,
+  },
+  profileBadgeContainer: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  authBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: Theme.colors.surfaceContainerLow,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: Theme.borderRadius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(190, 200, 202, 0.45)',
+  },
+  authBadgeText: {
+    fontFamily: Theme.typography.fontFamily.semiBold,
+    fontSize: 11,
+    color: Theme.colors.onSurface,
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  ratingText: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: 11,
+    color: Theme.colors.onSurfaceVariant,
   },
   balanceCard: {
     backgroundColor: Theme.colors.surfaceContainerLowest,

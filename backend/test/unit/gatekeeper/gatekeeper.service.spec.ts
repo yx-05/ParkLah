@@ -1,0 +1,104 @@
+import { GatekeeperService } from '../../../src/modules/gatekeeper/application/services/gatekeeper.service';
+import { GatekeeperEvaluatorService } from '../../../src/modules/gatekeeper/domain/services/gatekeeper-evaluator.service';
+import { MockGoogleMapsRoutingAdapter } from '../../../src/modules/gatekeeper/infrastructure/adapters/mock-google-maps.adapter';
+import { InMemorySearcherSpatialRepository } from '../../../src/modules/gatekeeper/infrastructure/adapters/in-memory-searcher-spatial.repository';
+import { GatekeeperLockedException } from '../../../src/common/exceptions';
+
+describe('GatekeeperService (Module 3 Unit Tests)', () => {
+  let gatekeeperService: GatekeeperService;
+  let mockRoutingAdapter: MockGoogleMapsRoutingAdapter;
+  let spatialRepo: InMemorySearcherSpatialRepository;
+  let evaluator: GatekeeperEvaluatorService;
+
+  beforeEach(() => {
+    mockRoutingAdapter = new MockGoogleMapsRoutingAdapter();
+    spatialRepo = new InMemorySearcherSpatialRepository();
+    evaluator = new GatekeeperEvaluatorService();
+    gatekeeperService = new GatekeeperService(mockRoutingAdapter, spatialRepo, evaluator);
+  });
+
+  it('should lock matchmaking when distance is 4.5km even if ETA is 8 minutes', async () => {
+    mockRoutingAdapter.setMockedMetrics(4500, 480); // 4.5km, 8 min
+
+    const evaluation = await gatekeeperService.evaluateDestination({
+      origin: { latitude: 3.100, longitude: 101.600 },
+      destination: { latitude: 3.140, longitude: 101.686, name: 'Mid Valley Megamall' },
+    });
+
+    expect(evaluation.isUnlocked).toBe(false);
+    expect(evaluation.distanceMeters).toBe(4500);
+    expect(evaluation.durationSeconds).toBe(480);
+    expect(evaluation.reason).toContain('Distance exceeds 3.0km');
+  });
+
+  it('should lock matchmaking when ETA is 14 minutes even if distance is 2.0km', async () => {
+    mockRoutingAdapter.setMockedMetrics(2000, 840); // 2.0km, 14 min
+
+    const evaluation = await gatekeeperService.evaluateDestination({
+      origin: { latitude: 3.130, longitude: 101.680 },
+      destination: { latitude: 3.140, longitude: 101.686, name: 'KLCC' },
+    });
+
+    expect(evaluation.isUnlocked).toBe(false);
+    expect(evaluation.distanceMeters).toBe(2000);
+    expect(evaluation.durationSeconds).toBe(840);
+    expect(evaluation.reason).toContain('ETA exceeds 10 minutes');
+  });
+
+  it('should unlock matchmaking when distance is 1.8km and ETA is 6 minutes', async () => {
+    mockRoutingAdapter.setMockedMetrics(1800, 360); // 1.8km, 6 min
+
+    const evaluation = await gatekeeperService.evaluateDestination({
+      origin: { latitude: 3.135, longitude: 101.682 },
+      destination: { latitude: 3.140, longitude: 101.686, name: 'Pavilion Bukit Bintang' },
+    });
+
+    expect(evaluation.isUnlocked).toBe(true);
+    expect(evaluation.distanceMeters).toBe(1800);
+    expect(evaluation.durationSeconds).toBe(360);
+    expect(evaluation.reason).toBeUndefined();
+  });
+
+  it('should throw GatekeeperLockedException (403) when starting matchmaking in locked state', async () => {
+    mockRoutingAdapter.setMockedMetrics(5000, 900); // 5km, 15 min (locked)
+
+    await expect(
+      gatekeeperService.startMatchmaking(
+        'searcher-locked-user',
+        {
+          destCoords: { latitude: 3.140, longitude: 101.686 },
+          destName: 'Mid Valley',
+        },
+        { latitude: 3.090, longitude: 101.600 },
+      ),
+    ).rejects.toThrow(GatekeeperLockedException);
+  });
+
+  it('should register searcher in active spatial queue when starting matchmaking in unlocked state', async () => {
+    mockRoutingAdapter.setMockedMetrics(1500, 300); // 1.5km, 5 min (unlocked)
+
+    const session = await gatekeeperService.startMatchmaking(
+      'searcher-valid-user',
+      {
+        destCoords: { latitude: 3.140, longitude: 101.686 },
+        destName: 'Mid Valley',
+        radiusMeters: 1000,
+      },
+      { latitude: 3.135, longitude: 101.680 },
+    );
+
+    expect(session.searcherId).toBe('searcher-valid-user');
+    expect(session.destName).toBe('Mid Valley');
+
+    const activeSession = await gatekeeperService.getActiveSearcherSession('searcher-valid-user');
+    expect(activeSession).toBeDefined();
+    expect(activeSession?.searcherId).toBe('searcher-valid-user');
+
+    // Stop matchmaking
+    const stopResult = await gatekeeperService.stopMatchmaking('searcher-valid-user');
+    expect(stopResult.success).toBe(true);
+
+    const clearedSession = await gatekeeperService.getActiveSearcherSession('searcher-valid-user');
+    expect(clearedSession).toBeNull();
+  });
+});

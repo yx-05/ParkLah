@@ -1,0 +1,51 @@
+import { MatchStatus, MatchType } from '../enums/match-status.enum';
+export interface MatchProps {
+    id?: string;
+    searcherId: string;
+    leaverId?: string | null;
+    probabilisticSpotId?: string | null;
+    matchType?: MatchType;
+    spotLatitude: number;
+    spotLongitude: number;
+    status?: MatchStatus;
+    searcherChargeAmount?: number;
+    leaverRewardAmount?: number;
+    platformFeeAmount?: number;
+    handshakeTimeoutSeconds?: number;
+    offeredAt?: Date;
+    acceptedAt?: Date | null;
+    arrivedAt?: Date | null;
+    completedAt?: Date | null;
+    cancelledAt?: Date | null;
+    cancellationReason?: string | null;
+}
+export declare class MatchEntity {
+    readonly id: string;
+    readonly searcherId: string;
+    readonly leaverId: string | null;
+    readonly probabilisticSpotId: string | null;
+    readonly matchType: MatchType;
+    readonly spotLatitude: number;
+    readonly spotLongitude: number;
+    status: MatchStatus;
+    readonly searcherChargeAmount: number;
+    readonly leaverRewardAmount: number;
+    readonly platformFeeAmount: number;
+    readonly handshakeTimeoutSeconds: number;
+    readonly offeredAt: Date;
+    acceptedAt: Date | null;
+    arrivedAt: Date | null;
+    completedAt: Date | null;
+    cancelledAt: Date | null;
+    cancellationReason: string | null;
+    constructor(props: MatchProps);
+    accept(): void;
+    markEnRoute(): void;
+    markArrived(): void;
+    markCompleted(): void;
+    markFailedSpotTaken(): void;
+    markTimeout(): void;
+    markDeclined(): void;
+    cancel(reason: string, by: 'SEARCHER' | 'LEAVER'): void;
+    private generateUuid;
+}

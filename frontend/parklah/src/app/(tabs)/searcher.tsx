@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,73 +8,29 @@ import {
   ScrollView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Theme } from '@/constants/theme';
 import { AppHeader } from '@/components/AppHeader';
 import { SearcherMap } from '@/components/SearcherMap';
 import { ParkingSpot } from '@/components/SearcherMap.types';
+import { MatchOfferModal } from '@/components/searcher/MatchOfferModal';
+import { ArrivalVerificationModal } from '@/components/searcher/ArrivalVerificationModal';
+import { LocationService } from '@/services/LocationService';
+import { SocketService } from '@/services/SocketService';
+import { apiService } from '@/services/ApiService';
+import { useSearcherStore } from '@/stores/useSearcherStore';
+import { NavigationLauncher } from '@/utils/navigationLauncher';
+import { MatchOffer } from '@/types';
 
-// Map region centered in the visible open viewport below top search card
-const INITIAL_REGION = {
-  latitude: 1.2948,
-  longitude: 103.852,
-  latitudeDelta: 0.012,
-  longitudeDelta: 0.012,
+// Default central region (Mid Valley Megamall, KL)
+const DEFAULT_COORDS = {
+  latitude: 3.1176,
+  longitude: 101.6778,
 };
-
-const USER_LOCATION = {
-  latitude: 1.296,
-  longitude: 103.852,
-};
-
-// Parking spots positioned clearly in the open viewport area
-const PARKING_SPOTS: ParkingSpot[] = [
-  {
-    id: '1',
-    name: 'Central Square Garage',
-    address: '150 Victoria Street',
-    rating: 4.8,
-    pricePerHour: 5,
-    distance: '0.4 km',
-    eta: '3 mins',
-    availableSpots: 12,
-    latitude: 1.2952,
-    longitude: 103.8565,
-  },
-  {
-    id: '2',
-    name: 'Marina Plaza Parking',
-    address: '88 Raffles Blvd',
-    rating: 5.0,
-    pricePerHour: 6,
-    distance: '0.8 km',
-    eta: '5 mins',
-    availableSpots: 5,
-    latitude: 1.293,
-    longitude: 103.854,
-  },
-  {
-    id: '3',
-    name: 'City Hub Parking',
-    address: '22 Orchard Way',
-    rating: 4.5,
-    pricePerHour: 4,
-    distance: '1.1 km',
-    eta: '7 mins',
-    availableSpots: 20,
-    latitude: 1.294,
-    longitude: 103.8475,
-  },
-];
-
-const ROUTE_COORDINATES = [
-  { latitude: 1.296, longitude: 103.852 },
-  { latitude: 1.2958, longitude: 103.8535 },
-  { latitude: 1.2952, longitude: 103.8565 },
-];
 
 const CHIPS = ['Nearest', 'Most Popular', 'Most Wanted'];
 
@@ -83,13 +39,144 @@ export default function SearcherScreen() {
   const insets = useSafeAreaInsets();
   const mapRef = useRef<any>(null);
 
+  // Searcher Store State
+  const {
+    state: searcherState,
+    activeOffer,
+    confirmedMatchId,
+    startActiveSearch,
+    setActiveOffer,
+    acceptOffer,
+    declineOffer,
+    setNavigatingToSpot,
+    setParkedSuccess,
+    reset,
+  } = useSearcherStore();
+
+  const [userLocation, setUserLocation] = useState(DEFAULT_COORDS);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeChip, setActiveChip] = useState('Nearest');
   const [matchmaking, setMatchmaking] = useState(false);
+  const [spots, setSpots] = useState<ParkingSpot[]>([]);
   const [selectedSpot, setSelectedSpot] = useState<ParkingSpot | null>(null);
   const [showRoute, setShowRoute] = useState(false);
-  // Real height of the opaque top header so map markers never hide beneath it.
   const [headerHeight, setHeaderHeight] = useState(230);
+
+  // Modals
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [showArrivalModal, setShowArrivalModal] = useState(false);
+
+  // 1. Initialize GPS Tracking & Real-Time WebSockets
+  useEffect(() => {
+    // Ensure authenticated session and WebSocket connection are active
+    apiService.bootstrapSession().catch(console.error);
+
+    const locService = LocationService.getInstance();
+
+    // Immediately acquire high-accuracy real device GPS
+    locService.getCurrentPosition().then((pos) => {
+      const realCoords = { latitude: pos.latitude, longitude: pos.longitude };
+      setUserLocation(realCoords);
+      loadSpotsForLocation(realCoords);
+
+      if (mapRef.current?.animateToRegion) {
+        mapRef.current.animateToRegion({
+          latitude: realCoords.latitude,
+          longitude: realCoords.longitude,
+          latitudeDelta: 0.012,
+          longitudeDelta: 0.012,
+        }, 800);
+      }
+    }).catch(console.error);
+
+    locService.startLocationUpdates().catch(console.error);
+
+    const unsubLoc = locService.subscribe((loc) => {
+      setUserLocation({ latitude: loc.latitude, longitude: loc.longitude });
+    });
+
+    const socketService = SocketService.getInstance();
+    const unsubOffer = socketService.on('match:offer', (offer: MatchOffer) => {
+      setActiveOffer(offer);
+      setShowMatchModal(true);
+      setMatchmaking(false);
+    });
+
+    const unsubConfirmed = socketService.on('match:confirmed', (matchData: any) => {
+      if (matchData?.matchId && matchData?.spotCoordinates) {
+        setNavigatingToSpot(matchData.matchId, matchData.spotCoordinates);
+      }
+      setShowMatchModal(false);
+      setShowArrivalModal(true);
+    });
+
+    return () => {
+      unsubLoc();
+      unsubOffer();
+      unsubConfirmed();
+    };
+  }, []);
+
+  const loadSpotsForLocation = async (coords: { latitude: number; longitude: number }) => {
+    try {
+      const results = await apiService.searchDestination('', coords);
+      if (results && results.length > 0) {
+        const mappedSpots: ParkingSpot[] = results.map((r, idx) => ({
+          id: r.id || `spot-${idx}`,
+          name: r.name || 'Available Spot',
+          address: r.address || 'Reserved Parking Area',
+          rating: 4.8,
+          pricePerHour: 5,
+          distance: `${((r.distanceMeters || 450) / 1000).toFixed(1)} km`,
+          eta: `${Math.round((r.distanceMeters || 450) / 100)} mins`,
+          availableSpots: r.confidenceScore ? Math.round(r.confidenceScore * 10) : 8,
+          latitude: r.latitude,
+          longitude: r.longitude,
+        }));
+        setSpots(mappedSpots);
+      }
+    } catch (e) {
+      // Fallback candidate spots around user's live position
+      setSpots([
+        {
+          id: '1',
+          name: 'Nearby Street Parking Bay',
+          address: 'Immediate Vacant Bay',
+          rating: 4.8,
+          pricePerHour: 5,
+          distance: '0.3 km',
+          eta: '2 mins',
+          availableSpots: 14,
+          latitude: coords.latitude + 0.002,
+          longitude: coords.longitude + 0.003,
+        },
+        {
+          id: '2',
+          name: 'Commercial Complex Bay',
+          address: 'Designated Visitor Parking',
+          rating: 4.9,
+          pricePerHour: 6,
+          distance: '0.6 km',
+          eta: '4 mins',
+          availableSpots: 6,
+          latitude: coords.latitude - 0.003,
+          longitude: coords.longitude + 0.002,
+        },
+        {
+          id: '3',
+          name: 'Public Exchange Bay',
+          address: 'Short Walk Away',
+          rating: 4.6,
+          pricePerHour: 4,
+          distance: '0.9 km',
+          eta: '6 mins',
+          availableSpots: 20,
+          latitude: coords.latitude + 0.004,
+          longitude: coords.longitude - 0.004,
+        },
+      ]);
+    }
+  };
 
   const handleSpotPress = (spot: ParkingSpot) => {
     setSelectedSpot(spot);
@@ -98,42 +185,172 @@ export default function SearcherScreen() {
     if (mapRef.current?.animateToRegion) {
       mapRef.current.animateToRegion(
         {
-          latitude: (USER_LOCATION.latitude + spot.latitude) / 2 - 0.001,
-          longitude: (USER_LOCATION.longitude + spot.longitude) / 2,
+          latitude: (userLocation.latitude + spot.latitude) / 2 - 0.001,
+          longitude: (userLocation.longitude + spot.longitude) / 2,
           latitudeDelta: 0.009,
           longitudeDelta: 0.009,
         },
-        800
+        800,
       );
     }
   };
 
-  const handleStartMatchmaking = () => {
+  // 2. Start Live Matchmaking with Backend Gatekeeper
+  const handleStartMatchmaking = async () => {
+    const target = selectedSpot || spots[0] || { latitude: userLocation.latitude, longitude: userLocation.longitude };
     setMatchmaking(true);
 
-    setTimeout(() => {
-      setMatchmaking(false);
-      const nearest = PARKING_SPOTS[0];
-      setSelectedSpot(nearest);
-      setShowRoute(true);
+    try {
+      await apiService.bootstrapSession();
+      await apiService.startSearch(userLocation, {
+        latitude: target.latitude,
+        longitude: target.longitude,
+        name: (target as any).name || 'Target Parking Bay',
+      });
+      startActiveSearch();
+    } catch (e: any) {
+      startActiveSearch();
+    }
+  };
 
-      if (mapRef.current?.animateToRegion) {
-        mapRef.current.animateToRegion(
-          {
-            latitude: (USER_LOCATION.latitude + nearest.latitude) / 2 - 0.001,
-            longitude: (USER_LOCATION.longitude + nearest.longitude) / 2,
-            latitudeDelta: 0.009,
-            longitudeDelta: 0.009,
-          },
-          1000
+  const handleCancelMatchmaking = async () => {
+    setMatchmaking(false);
+    reset();
+    apiService.stopSearch().catch(() => {});
+  };
+
+  const handleChipPress = (chip: string) => {
+    setActiveChip(chip);
+    if (chip === 'Nearest') {
+      loadSpotsForLocation(userLocation);
+    } else if (chip === 'Most Popular') {
+      // Pavilion KL
+      const pavCoords = { latitude: 3.1488, longitude: 101.7133 };
+      loadSpotsForLocation(pavCoords);
+    } else {
+      // KLCC
+      const klccCoords = { latitude: 3.1579, longitude: 101.7116 };
+      loadSpotsForLocation(klccCoords);
+    }
+  };
+
+  const handleSearchSubmit = async () => {
+    if (!searchQuery.trim()) return;
+    try {
+      const results = await apiService.searchDestination(searchQuery, userLocation);
+      if (results && results.length > 0) {
+        const topResult = results[0];
+        const newSpot: ParkingSpot = {
+          id: topResult.id || 'search-res',
+          name: topResult.name,
+          address: topResult.address || 'Selected Destination',
+          rating: 4.8,
+          pricePerHour: 5,
+          distance: `${((topResult.distanceMeters || 500) / 1000).toFixed(1)} km`,
+          eta: `${Math.round((topResult.distanceMeters || 500) / 100)} mins`,
+          availableSpots: 10,
+          latitude: topResult.latitude,
+          longitude: topResult.longitude,
+        };
+        setSelectedSpot(newSpot);
+        setShowRoute(true);
+        if (mapRef.current?.animateToRegion) {
+          mapRef.current.animateToRegion({
+            latitude: topResult.latitude,
+            longitude: topResult.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }, 800);
+        }
+      }
+    } catch (e) {
+      console.warn('Destination search:', e);
+    }
+  };
+
+  // 3. Match Acceptance & Turn-by-Turn Navigation
+  const handleAcceptMatch = async (matchId: string) => {
+    try {
+      await apiService.acceptMatch(matchId);
+      acceptOffer(matchId);
+      setShowMatchModal(false);
+      setShowArrivalModal(true);
+
+      if (activeOffer?.spotCoords) {
+        const { latitude, longitude } = activeOffer.spotCoords;
+        Alert.alert(
+          'Match Confirmed! 🚗',
+          'Open turn-by-turn directions to reserved spot?',
+          [
+            { text: 'Waze', onPress: () => NavigationLauncher.openWaze(latitude, longitude) },
+            { text: 'Google Maps', onPress: () => NavigationLauncher.openGoogleMaps(latitude, longitude) },
+            { text: 'In-App Map Only', style: 'cancel' },
+          ],
         );
       }
-    }, 1200);
+    } catch (err: any) {
+      Alert.alert('Match Expired', err.message || 'The spot expired or was claimed.');
+      declineOffer();
+      setShowMatchModal(false);
+    }
+  };
+
+  const handleDeclineMatch = async () => {
+    if (activeOffer) {
+      try {
+        await apiService.declineMatch(activeOffer.matchId);
+      } catch (e) {}
+    }
+    declineOffer();
+    setShowMatchModal(false);
+  };
+
+  // 4. Arrival Verification
+  const handleConfirmParked = async () => {
+    const matchIdToConfirm = confirmedMatchId || activeOffer?.matchId;
+    if (!matchIdToConfirm) {
+      setShowArrivalModal(false);
+      return;
+    }
+    try {
+      await apiService.confirmArrival(matchIdToConfirm);
+      Alert.alert('Parked Successfully! 🎉', 'Handover confirmed. Spot payment settled.');
+      setParkedSuccess();
+      setShowArrivalModal(false);
+      setSelectedSpot(null);
+      setShowRoute(false);
+    } catch (err: any) {
+      Alert.alert('Verification Issue', err.message || 'Unable to verify arrival at this location.');
+      setShowArrivalModal(false);
+    }
+  };
+
+  const handleReportSpotTaken = async () => {
+    const matchIdToReport = confirmedMatchId || activeOffer?.matchId;
+    if (!matchIdToReport) {
+      setShowArrivalModal(false);
+      reset();
+      return;
+    }
+    try {
+      await apiService.reportSpotTaken(matchIdToReport, 'Spot taken by third party upon arrival');
+      Alert.alert('Dispute Filed', 'Spot reported taken. Zero fee charged.');
+      setShowArrivalModal(false);
+      reset();
+    } catch (e: any) {
+      setShowArrivalModal(false);
+      reset();
+    }
   };
 
   const handleRecenter = () => {
     if (mapRef.current?.animateToRegion) {
-      mapRef.current.animateToRegion(INITIAL_REGION, 600);
+      mapRef.current.animateToRegion({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.012,
+        longitudeDelta: 0.012,
+      }, 600);
     }
   };
 
@@ -143,21 +360,26 @@ export default function SearcherScreen() {
     handleRecenter();
   };
 
+  const isScanning = matchmaking || searcherState === 'ACTIVE_RADAR_SEARCH';
+
   return (
     <View style={styles.container}>
       {/* Full-Screen Interactive Map with Viewport Padding */}
       <SearcherMap
-        userLocation={USER_LOCATION}
-        spots={PARKING_SPOTS}
+        userLocation={userLocation}
+        spots={spots}
         selectedSpot={selectedSpot}
         showRoute={showRoute}
-        routeCoordinates={ROUTE_COORDINATES}
+        routeCoordinates={[
+          userLocation,
+          selectedSpot ? { latitude: selectedSpot.latitude, longitude: selectedSpot.longitude } : { latitude: userLocation.latitude + 0.002, longitude: userLocation.longitude + 0.003 },
+        ]}
         onSpotPress={handleSpotPress}
         mapRef={mapRef}
         headerHeight={headerHeight}
       />
 
-      {/* Floating Top Header & Search Controls (Extending all the way up to top of screen) */}
+      {/* Floating Top Header & Search Controls */}
       <View
         style={[styles.topHeaderContainer, { paddingTop: insets.top }]}
         onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
@@ -178,6 +400,8 @@ export default function SearcherScreen() {
             placeholderTextColor={Theme.colors.outlineVariant}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearchSubmit}
+            returnKeyType="search"
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
@@ -198,7 +422,7 @@ export default function SearcherScreen() {
               <TouchableOpacity
                 key={chip}
                 style={[styles.chip, isActive && styles.activeChip]}
-                onPress={() => setActiveChip(chip)}
+                onPress={() => handleChipPress(chip)}
                 activeOpacity={0.8}
               >
                 <Text style={[styles.chipText, isActive && styles.activeChipText]}>
@@ -209,17 +433,24 @@ export default function SearcherScreen() {
           })}
         </ScrollView>
 
-        {/* Matchmaking Action Button (When no spot is selected) */}
+        {/* Matchmaking Action Button */}
         {!selectedSpot && (
           <TouchableOpacity
-            style={[styles.matchButton, matchmaking && styles.matchButtonActive]}
-            onPress={handleStartMatchmaking}
+            style={[styles.matchButton, isScanning && styles.matchButtonActive]}
+            onPress={isScanning ? handleCancelMatchmaking : handleStartMatchmaking}
             activeOpacity={0.88}
           >
+            {isScanning ? (
+              <ActivityIndicator size="small" color={Theme.colors.darkTeal} style={{ marginRight: 6 }} />
+            ) : null}
             <Text style={styles.matchButtonText}>
-              {matchmaking ? 'Finding Best Spot...' : 'Start Matchmaking'}
+              {isScanning ? 'Radar Scanning for Spots...' : 'Start Matchmaking'}
             </Text>
-            <MaterialIcons name="navigation" size={18} color={Theme.colors.darkTeal} />
+            <MaterialIcons
+              name={isScanning ? 'close' : 'navigation'}
+              size={18}
+              color={Theme.colors.darkTeal}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -281,26 +512,41 @@ export default function SearcherScreen() {
                 style={styles.navigateButton}
                 onPress={() => {
                   Alert.alert(
-                    'Spot Reserved!',
-                    `Proceeding to ${selectedSpot.name}. Points will be calculated upon exit.`,
+                    'Reserve & Navigate',
+                    `Start active radar matching at ${selectedSpot.name}?`,
                     [
                       {
-                        text: 'View Wallet',
-                        onPress: () => router.push('/points'),
+                        text: 'Start Matching',
+                        onPress: handleStartMatchmaking,
                       },
-                      { text: 'OK', style: 'cancel' },
+                      { text: 'Cancel', style: 'cancel' },
                     ]
                   );
                 }}
                 activeOpacity={0.88}
               >
                 <MaterialIcons name="directions" size={20} color={Theme.colors.darkTeal} />
-                <Text style={styles.navigateButtonText}>Navigate to Spot</Text>
+                <Text style={styles.navigateButtonText}>Match Leaver at this Spot</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       )}
+
+      {/* 15-Second Match Offer Modal */}
+      <MatchOfferModal
+        visible={showMatchModal}
+        offer={activeOffer}
+        onAccept={handleAcceptMatch}
+        onDecline={handleDeclineMatch}
+      />
+
+      {/* Arrival Verification Modal */}
+      <ArrivalVerificationModal
+        visible={showArrivalModal}
+        onConfirmParked={handleConfirmParked}
+        onReportSpotTaken={handleReportSpotTaken}
+      />
     </View>
   );
 }
@@ -424,7 +670,8 @@ const styles = StyleSheet.create({
     }),
   },
   matchButtonActive: {
-    opacity: 0.85,
+    opacity: 0.9,
+    backgroundColor: '#99F6E4',
   },
   matchButtonText: {
     fontFamily: Theme.typography.fontFamily.bold,

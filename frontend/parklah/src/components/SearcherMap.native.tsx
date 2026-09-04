@@ -215,9 +215,16 @@ export function SearcherMap({
         ref={mapRef}
         provider={PROVIDER_DEFAULT}
         style={StyleSheet.absoluteFillObject}
-        initialRegion={INITIAL_REGION}
+        initialRegion={{
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          latitudeDelta: 0.012,
+          longitudeDelta: 0.012,
+        }}
         customMapStyle={AEGEAN_MAP_STYLE}
         showsCompass={false}
+        showsUserLocation={true}
+        showsMyLocationButton={false}
         showsPointsOfInterest={false}
         mapPadding={{
           top: headerHeight,
