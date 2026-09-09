@@ -8,6 +8,9 @@ export interface ActiveSearcherSession {
     radiusMeters: number;
     registeredAt: Date;
     lastHeartbeat: Date;
+    headingDegrees?: number;
+    speedKmh?: number;
+    gpsAccuracyMeters?: number;
 }
 export interface ISearcherSpatialRepositoryPort {
     registerActiveSearcher(searcherId: string, currentCoords: LatLng, destCoords: LatLng, destName: string, radiusMeters?: number): Promise<ActiveSearcherSession>;

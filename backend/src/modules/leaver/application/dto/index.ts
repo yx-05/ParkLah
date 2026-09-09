@@ -37,7 +37,7 @@ export class DepartureBroadcastDto {
 
   @IsNotEmpty()
   @IsNumber()
-  @Min(180, { message: 'Countdown must be at least 180 seconds (3 minutes)' })
+  @Min(0, { message: 'Countdown must be at least 0 seconds (0 for Instant broadcast)' })
   @Max(300, { message: 'Countdown must be at most 300 seconds (5 minutes)' })
   countdownSeconds: number;
 

@@ -1,5 +1,6 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { Pool } from 'pg';
+import { getSharedPostgresPool } from '../../../../database/postgres-pool.helper';
 import { IUserRepositoryPort } from '../../domain/ports/user-repository.port';
 import { UserEntity, AuthProvider } from '../../domain/entities/user.entity';
 
@@ -10,13 +11,8 @@ export class PostgresUserRepository implements IUserRepositoryPort {
   constructor(@Optional() pool?: Pool) {
     if (pool) {
       this.pool = pool;
-    } else if (process.env.DATABASE_URL) {
-      const isSupabase = process.env.DATABASE_URL.includes('supabase') || process.env.DATABASE_SSL === 'true';
-      const connectionString = process.env.DATABASE_URL.replace('?sslmode=require', '').replace('&sslmode=require', '');
-      this.pool = new Pool({
-        connectionString,
-        ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
-      });
+    } else {
+      this.pool = getSharedPostgresPool();
     }
   }
 
@@ -54,8 +50,8 @@ export class PostgresUserRepository implements IUserRepositoryPort {
   async create(user: UserEntity): Promise<UserEntity> {
     if (!this.pool) return user;
     await this.pool.query(
-      `INSERT INTO users (id, phone_number, email, full_name, auth_provider, auth_provider_id, avatar_url, reliability_rating, total_completed_matches, total_disputes_count, is_active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+      `INSERT INTO users (id, phone_number, email, full_name, auth_provider, auth_provider_id, avatar_url, reliability_rating, total_completed_matches, total_disputes_count, is_active, password_hash, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
       [
         user.id,
         user.phoneNumber,
@@ -68,6 +64,7 @@ export class PostgresUserRepository implements IUserRepositoryPort {
         user.totalCompletedMatches,
         user.totalDisputesCount,
         user.isActive,
+        user.passwordHash || null,
         user.createdAt,
         user.updatedAt,
       ],
@@ -89,7 +86,8 @@ export class PostgresUserRepository implements IUserRepositoryPort {
         total_completed_matches = $9,
         total_disputes_count = $10,
         is_active = $11,
-        updated_at = $12
+        password_hash = $12,
+        updated_at = $13
        WHERE id = $1`,
       [
         user.id,
@@ -103,6 +101,7 @@ export class PostgresUserRepository implements IUserRepositoryPort {
         user.totalCompletedMatches,
         user.totalDisputesCount,
         user.isActive,
+        user.passwordHash || null,
         user.updatedAt,
       ],
     );
@@ -118,6 +117,7 @@ export class PostgresUserRepository implements IUserRepositoryPort {
       authProvider: row.auth_provider as AuthProvider,
       authProviderId: row.auth_provider_id,
       avatarUrl: row.avatar_url,
+      passwordHash: row.password_hash || null,
       reliabilityRating: parseFloat(row.reliability_rating),
       totalCompletedMatches: parseInt(row.total_completed_matches, 10),
       totalDisputesCount: parseInt(row.total_disputes_count, 10),

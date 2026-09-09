@@ -12,6 +12,10 @@ import { SocketBroadcasterService } from '../../../src/modules/gateway/applicati
 import { RoomManagerService } from '../../../src/modules/gateway/infrastructure/services/room-manager.service';
 import { MatchStatus } from '../../../src/modules/matchmaker/domain/enums/match-status.enum';
 
+import { PharosCandidateFilterService } from '../../../src/modules/matchmaker/domain/services/pharos-candidate-filter.service';
+import { OsrmRoadRoutingAdapter } from '../../../src/modules/matchmaker/infrastructure/adapters/osrm-road-routing.adapter';
+import { OnnxMlMatchScoringAdapter } from '../../../src/modules/matchmaker/infrastructure/adapters/onnx-ml-match-scoring.adapter';
+
 describe('SpatialMatchmakerService (Module 5 Unit Tests)', () => {
   let matchmakerService: SpatialMatchmakerService;
   let matchRepo: InMemoryMatchRepository;
@@ -27,8 +31,16 @@ describe('SpatialMatchmakerService (Module 5 Unit Tests)', () => {
     lockAdapter = new InMemoryLockAdapter();
     searcherRepo = new InMemorySearcherSpatialRepository();
     userRepo = new InMemoryUserRepository();
-    const scoringEngine = new MatchScoringEngine();
-    const candidateDiscovery = new CandidateDiscoveryService(searcherRepo, userRepo, scoringEngine);
+    const pharosFilter = new PharosCandidateFilterService();
+    const roadRouting = new OsrmRoadRoutingAdapter('http://localhost:59999', 100);
+    const mlScoring = new OnnxMlMatchScoringAdapter();
+    const candidateDiscovery = new CandidateDiscoveryService(
+      searcherRepo,
+      userRepo,
+      pharosFilter,
+      roadRouting,
+      mlScoring,
+    );
 
     const probRepo = new InMemoryProbabilisticSpotRepository();
     const decayEngine = new DecayEngine();

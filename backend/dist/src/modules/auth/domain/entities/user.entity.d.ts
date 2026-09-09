@@ -1,4 +1,4 @@
-export type AuthProvider = 'PHONE' | 'GOOGLE' | 'FACEBOOK' | 'APPLE';
+export type AuthProvider = 'PHONE' | 'GOOGLE' | 'FACEBOOK' | 'APPLE' | 'EMAIL';
 export interface UserProps {
     id?: string;
     phoneNumber?: string | null;
@@ -7,6 +7,7 @@ export interface UserProps {
     authProvider?: AuthProvider;
     authProviderId?: string | null;
     avatarUrl?: string | null;
+    passwordHash?: string | null;
     reliabilityRating?: number;
     totalCompletedMatches?: number;
     totalDisputesCount?: number;
@@ -22,6 +23,7 @@ export declare class UserEntity {
     authProvider: AuthProvider;
     authProviderId: string | null;
     avatarUrl: string | null;
+    passwordHash: string | null;
     reliabilityRating: number;
     totalCompletedMatches: number;
     totalDisputesCount: number;

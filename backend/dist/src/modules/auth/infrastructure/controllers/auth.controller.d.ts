@@ -1,9 +1,25 @@
 import { HttpStatus } from '@nestjs/common';
 import { AuthService } from '../../application/services/auth.service';
-import { RequestOtpDto, VerifyOtpDto, RefreshTokenDto, OAuthLoginDto } from '../../application/dto';
+import { RequestOtpDto, VerifyOtpDto, RefreshTokenDto, OAuthLoginDto, LoginDto, RegisterDto } from '../../application/dto';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
+    login(dto: LoginDto): Promise<{
+        success: boolean;
+        statusCode: HttpStatus;
+        data: import("../../application/services/auth.service").AuthResult;
+        meta: {
+            timestamp: string;
+        };
+    }>;
+    register(dto: RegisterDto): Promise<{
+        success: boolean;
+        statusCode: HttpStatus;
+        data: import("../../application/services/auth.service").AuthResult;
+        meta: {
+            timestamp: string;
+        };
+    }>;
     requestOtp(dto: RequestOtpDto): Promise<{
         success: boolean;
         statusCode: HttpStatus;

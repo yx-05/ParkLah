@@ -47,6 +47,10 @@ export default function LeaverScreen() {
   const activeVehicle = useUserStore((s) => s.activeVehicle);
   const setActiveVehicle = useUserStore((s) => s.setActiveVehicle);
 
+  useEffect(() => {
+    useUserStore.getState().setLastRoute('/leaver');
+  }, []);
+
   const [plate, setPlate] = useState('VAA 8822 K');
   const [carModel, setCarModel] = useState('Perodua Myvi');
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
@@ -92,9 +96,12 @@ export default function LeaverScreen() {
       await apiService.broadcastDeparture(userLocation, data.countdownSeconds, data.landmarkNote);
       startBroadcast(userLocation, data.countdownSeconds, data.landmarkNote);
       setShowBroadcastModal(false);
+      const isInstant = data.countdownSeconds === 0;
       Alert.alert(
         'Departure Active! 📢',
-        `Your spot is broadcast to nearby searchers for ${Math.round(data.countdownSeconds / 60)} minutes.`,
+        isInstant
+          ? 'Your spot is broadcast as Instant Departure (Leaving Now)! Nearby searchers are notified immediately.'
+          : `Your spot is broadcast to nearby searchers for ${Math.round(data.countdownSeconds / 60)} minutes.`,
       );
     } catch (err: any) {
       Alert.alert('Broadcast Error', err.message || 'Unable to broadcast departure.');
@@ -165,7 +172,7 @@ export default function LeaverScreen() {
             <View style={styles.headingSection}>
               <Text style={styles.title}>Leaving soon?</Text>
               <Text style={styles.subtitle}>
-                Broadcast your spot to earn RM 0.25 rewards upon vehicle handover.
+                Broadcast your spot to earn 25 pts rewards upon vehicle handover.
               </Text>
             </View>
 
@@ -176,9 +183,11 @@ export default function LeaverScreen() {
 
                 <View style={styles.timerCircle}>
                   <Text style={styles.timerLargeText}>
-                    {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+                    {countdownSeconds === 0 ? 'NOW' : `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`}
                   </Text>
-                  <Text style={styles.timerUnit}>Minutes Remaining</Text>
+                  <Text style={styles.timerUnit}>
+                    {countdownSeconds === 0 ? 'Instant Departure' : 'Minutes Remaining'}
+                  </Text>
                 </View>
 
                 <View style={styles.detailsBox}>
@@ -340,8 +349,8 @@ export default function LeaverScreen() {
             </Text>
 
             <View style={styles.rewardBadge}>
-              <MaterialIcons name="monetization-on" size={24} color={Theme.colors.starGold} />
-              <Text style={styles.rewardText}>+RM 0.25 Earned!</Text>
+              <MaterialIcons name="stars" size={24} color={Theme.colors.starGold} />
+              <Text style={styles.rewardText}>+25 pts Earned!</Text>
             </View>
 
             <View style={styles.modalActions}>

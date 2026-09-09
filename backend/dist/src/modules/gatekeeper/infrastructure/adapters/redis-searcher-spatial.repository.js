@@ -48,7 +48,7 @@ let RedisSearcherSpatialRepository = class RedisSearcherSpatialRepository {
         };
         if (this.redis) {
             await this.redis.geoadd(this.GEO_KEY, currentCoords.longitude, currentCoords.latitude, searcherId);
-            await this.redis.set(`${this.STATE_PREFIX}${searcherId}`, JSON.stringify(session), 'EX', 60);
+            await this.redis.set(`${this.STATE_PREFIX}${searcherId}`, JSON.stringify(session), 'EX', 300);
         }
         return session;
     }
@@ -60,7 +60,7 @@ let RedisSearcherSpatialRepository = class RedisSearcherSpatialRepository {
         if (existing) {
             existing.currentCoords = coords;
             existing.lastHeartbeat = new Date();
-            await this.redis.set(`${this.STATE_PREFIX}${searcherId}`, JSON.stringify(existing), 'EX', 60);
+            await this.redis.set(`${this.STATE_PREFIX}${searcherId}`, JSON.stringify(existing), 'EX', 300);
         }
     }
     async removeActiveSearcher(searcherId) {

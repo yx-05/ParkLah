@@ -10,14 +10,22 @@ exports.SpatialMatchmakerModule = void 0;
 const common_1 = require("@nestjs/common");
 const spatial_matchmaker_service_1 = require("./application/services/spatial-matchmaker.service");
 const match_scoring_engine_1 = require("./domain/services/match-scoring.engine");
+const pharos_candidate_filter_service_1 = require("./domain/services/pharos-candidate-filter.service");
 const candidate_discovery_service_1 = require("./infrastructure/services/candidate-discovery.service");
 const matchmaker_controller_1 = require("./infrastructure/controllers/matchmaker.controller");
 const match_repository_port_1 = require("./domain/ports/match-repository.port");
 const distributed_lock_port_1 = require("./domain/ports/distributed-lock.port");
+const road_routing_port_1 = require("./domain/ports/road-routing.port");
+const ml_match_scoring_port_1 = require("./domain/ports/ml-match-scoring.port");
+const ml_feature_repository_port_1 = require("./domain/ports/ml-feature-repository.port");
 const postgres_match_repository_1 = require("./infrastructure/adapters/postgres-match.repository");
 const redis_lock_adapter_1 = require("./infrastructure/adapters/redis-lock.adapter");
 const in_memory_match_repository_1 = require("./infrastructure/adapters/in-memory-match.repository");
 const in_memory_lock_adapter_1 = require("./infrastructure/adapters/in-memory-lock.adapter");
+const osrm_road_routing_adapter_1 = require("./infrastructure/adapters/osrm-road-routing.adapter");
+const onnx_ml_match_scoring_adapter_1 = require("./infrastructure/adapters/onnx-ml-match-scoring.adapter");
+const postgres_ml_feature_repository_1 = require("./infrastructure/repositories/postgres-ml-feature.repository");
+const ml_feature_logger_service_1 = require("./application/services/ml-feature-logger.service");
 const gatekeeper_module_1 = require("../gatekeeper/gatekeeper.module");
 const probabilistic_vacancy_module_1 = require("../probabilistic/probabilistic-vacancy.module");
 const gateway_module_1 = require("../gateway/gateway.module");
@@ -37,7 +45,9 @@ exports.SpatialMatchmakerModule = SpatialMatchmakerModule = __decorate([
         providers: [
             spatial_matchmaker_service_1.SpatialMatchmakerService,
             match_scoring_engine_1.MatchScoringEngine,
+            pharos_candidate_filter_service_1.PharosCandidateFilterService,
             candidate_discovery_service_1.CandidateDiscoveryService,
+            ml_feature_logger_service_1.MlFeatureLoggerService,
             {
                 provide: match_repository_port_1.MATCH_REPOSITORY_PORT,
                 useFactory: () => {
@@ -54,13 +64,30 @@ exports.SpatialMatchmakerModule = SpatialMatchmakerModule = __decorate([
                         : new in_memory_lock_adapter_1.InMemoryLockAdapter();
                 },
             },
+            {
+                provide: road_routing_port_1.ROAD_ROUTING_PORT,
+                useFactory: () => new osrm_road_routing_adapter_1.OsrmRoadRoutingAdapter(),
+            },
+            {
+                provide: ml_match_scoring_port_1.ML_MATCH_SCORING_PORT,
+                useFactory: () => new onnx_ml_match_scoring_adapter_1.OnnxMlMatchScoringAdapter(),
+            },
+            {
+                provide: ml_feature_repository_port_1.ML_FEATURE_REPOSITORY_PORT,
+                useFactory: () => new postgres_ml_feature_repository_1.PostgresMlFeatureRepository(),
+            },
         ],
         exports: [
             spatial_matchmaker_service_1.SpatialMatchmakerService,
             match_scoring_engine_1.MatchScoringEngine,
+            pharos_candidate_filter_service_1.PharosCandidateFilterService,
             candidate_discovery_service_1.CandidateDiscoveryService,
+            ml_feature_logger_service_1.MlFeatureLoggerService,
             match_repository_port_1.MATCH_REPOSITORY_PORT,
             distributed_lock_port_1.DISTRIBUTED_LOCK_PORT,
+            road_routing_port_1.ROAD_ROUTING_PORT,
+            ml_match_scoring_port_1.ML_MATCH_SCORING_PORT,
+            ml_feature_repository_port_1.ML_FEATURE_REPOSITORY_PORT,
         ],
     })
 ], SpatialMatchmakerModule);

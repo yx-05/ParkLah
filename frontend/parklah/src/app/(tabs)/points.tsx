@@ -34,15 +34,15 @@ const DEFAULT_TRANSACTIONS: Transaction[] = [
     id: '1',
     title: 'Mid Valley Megamall Spot',
     time: 'Today, 2:30 PM',
-    amount: -0.5,
+    amount: -50,
     type: 'debit',
     icon: 'local-parking',
   },
   {
     id: '2',
-    title: 'Wallet Top Up',
+    title: 'Points Reload',
     time: 'Yesterday, 10:00 AM',
-    amount: 20.0,
+    amount: 200,
     type: 'credit',
     icon: 'add-circle-outline',
   },
@@ -50,7 +50,7 @@ const DEFAULT_TRANSACTIONS: Transaction[] = [
     id: '3',
     title: 'Spot Handover Reward',
     time: 'Oct 24, 6:00 PM',
-    amount: 0.25,
+    amount: 25,
     type: 'credit',
     icon: 'share-location',
   },
@@ -61,8 +61,12 @@ export default function PointsScreen() {
   const user = useUserStore((s) => s.user);
   const logout = useUserStore((s) => s.logout);
 
-  const [balance, setBalance] = useState<number>(20.0);
-  const [currency, setCurrency] = useState<string>('RM');
+  useEffect(() => {
+    useUserStore.getState().setLastRoute('/points');
+  }, []);
+
+  const [balance, setBalance] = useState<number>(200);
+  const [currency, setCurrency] = useState<string>('pts');
   const [transactions, setTransactions] = useState<Transaction[]>(DEFAULT_TRANSACTIONS);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -71,20 +75,44 @@ export default function PointsScreen() {
     try {
       const balRes = await apiService.getWalletBalance();
       if (balRes && balRes.balance !== undefined) {
-        setBalance(balRes.balance);
-        if (balRes.currency) setCurrency(balRes.currency);
+        setBalance(Math.round(balRes.balance * 100));
+        setCurrency('pts');
       }
 
-      const txList = await apiService.getWalletTransactions(1, 10);
+      const txRes: any = await apiService.getWalletTransactions(1, 20);
+      const txList: any[] = Array.isArray(txRes) ? txRes : txRes?.transactions || [];
       if (txList && txList.length > 0) {
-        const mappedTx: Transaction[] = txList.map((tx: any) => ({
-          id: tx.id,
-          title: tx.description || 'Wallet Transaction',
-          time: new Date(tx.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          amount: parseFloat(tx.amount),
-          type: tx.type === 'DEBIT' ? 'debit' : 'credit',
-          icon: tx.type === 'DEBIT' ? 'local-parking' : 'add-circle-outline',
-        }));
+        const mappedTx: Transaction[] = txList.map((tx: any) => {
+          const rawAmount = parseFloat(tx.amount);
+          const isDebit =
+            rawAmount < 0 ||
+            tx.type === 'SEARCHER_HANDOFF_FEE' ||
+            tx.type === 'MOCK_CASHOUT' ||
+            tx.type === 'DEBIT';
+
+          let title = tx.description;
+          if (!title) {
+            if (tx.type === 'SEARCHER_HANDOFF_FEE') title = 'Parking Bay Handover Fee';
+            else if (tx.type === 'LEAVER_HANDOFF_REWARD') title = 'Spot Handover Reward';
+            else if (tx.type === 'MOCK_TOPUP') title = 'Points Reload';
+            else if (tx.type === 'MOCK_CASHOUT') title = 'Points Cash-Out';
+            else title = 'Wallet Transaction';
+          }
+
+          const ptsAmount = Math.round(Math.abs(rawAmount) * 100);
+
+          return {
+            id: tx.id || String(Math.random()),
+            title,
+            time: new Date(tx.createdAt || Date.now()).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+            amount: ptsAmount,
+            type: isDebit ? 'debit' : 'credit',
+            icon: isDebit ? 'local-parking' : 'add-circle-outline',
+          };
+        });
         setTransactions(mappedTx);
       }
     } catch (err: any) {
@@ -94,30 +122,42 @@ export default function PointsScreen() {
 
   useEffect(() => {
     loadWalletData();
+
+    // Listen to real-time wallet updates via WebSocket
+    const unsubWallet = SocketService.getInstance().on('wallet:balance_update', (data: any) => {
+      if (data && data.balance !== undefined) {
+        setBalance(Math.round(data.balance * 100));
+        loadWalletData();
+      }
+    });
+
+    return () => {
+      unsubWallet();
+    };
   }, []);
 
   // 2. Real Wallet Top-Up via Backend API
   const handleBuyPoints = () => {
     Alert.alert(
-      'Top Up Wallet',
-      'Select an amount to reload your ParkLah balance:',
+      'Reload Points',
+      'Select a points package to reload your ParkLah balance:',
       [
         {
-          text: '+RM 10.00',
+          text: '+100 pts (RM 1.00)',
           onPress: async () => {
-            await performTopup(10);
+            await performTopup(1.0);
           },
         },
         {
-          text: '+RM 20.00',
+          text: '+200 pts (RM 2.00)',
           onPress: async () => {
-            await performTopup(20);
+            await performTopup(2.0);
           },
         },
         {
-          text: '+RM 50.00',
+          text: '+500 pts (RM 5.00)',
           onPress: async () => {
-            await performTopup(50);
+            await performTopup(5.0);
           },
         },
         { text: 'Cancel', style: 'cancel' },
@@ -125,14 +165,14 @@ export default function PointsScreen() {
     );
   };
 
-  const performTopup = async (amount: number) => {
+  const performTopup = async (rmAmount: number) => {
     setLoading(true);
     try {
-      await apiService.mockTopup(amount);
+      await apiService.mockTopup(rmAmount);
       await loadWalletData();
-      Alert.alert('Top-Up Successful! 🎉', `RM ${amount.toFixed(2)} added to your wallet.`);
+      Alert.alert('Top-Up Successful! 🎉', `${Math.round(rmAmount * 100)} points added to your balance.`);
     } catch (err: any) {
-      Alert.alert('Top-Up Issue', err.message || 'Unable to top up wallet at this time.');
+      Alert.alert('Top-Up Issue', err.message || 'Unable to top up points at this time.');
     } finally {
       setLoading(false);
     }
@@ -142,12 +182,12 @@ export default function PointsScreen() {
     if (type === 'share') {
       Alert.alert(
         'Leave & Earn',
-        'When leaving your parking spot, tap "I\'M LEAVING" to broadcast your departure and earn RM 0.25 on handover!',
+        'When leaving your parking spot, broadcast your departure and earn 25 pts on vehicle handover!',
       );
     } else {
       Alert.alert(
         'Invite Drivers',
-        'Share ParkLah with fellow drivers to earn bonus RM 2.00 parking credits!',
+        'Share ParkLah with fellow drivers to earn bonus 200 pts parking credits!',
       );
     }
   };
@@ -236,20 +276,23 @@ export default function PointsScreen() {
             <View style={styles.decorBubbleTopRight} />
             <View style={styles.decorBubbleBottomLeft} />
 
-            <Text style={styles.balanceLabel}>CURRENT BALANCE</Text>
+            <Text style={styles.balanceLabel}>POINTS BALANCE</Text>
 
             <View style={styles.balanceValueRow}>
               <MaterialIcons
-                name="monetization-on"
+                name="stars"
                 size={36}
                 color={Theme.colors.stormyTeal}
                 style={styles.coinIcon}
               />
               <Text style={styles.balanceNumber}>
-                {typeof balance === 'number' ? balance.toFixed(2) : balance}
+                {typeof balance === 'number' ? balance.toLocaleString() : balance}
               </Text>
-              <Text style={styles.balanceUnit}>{currency}</Text>
+              <Text style={styles.balanceUnit}>pts</Text>
             </View>
+            <Text style={styles.myrSubtext}>
+              ≈ RM {(balance / 100).toFixed(2)} (100 pts = RM 1.00)
+            </Text>
 
             <TouchableOpacity
               style={styles.buyButton}
@@ -260,7 +303,7 @@ export default function PointsScreen() {
               {loading ? (
                 <ActivityIndicator size="small" color={Theme.colors.darkTeal} />
               ) : (
-                <Text style={styles.buyButtonText}>Top Up Wallet</Text>
+                <Text style={styles.buyButtonText}>Reload Points</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -370,7 +413,7 @@ export default function PointsScreen() {
                         isDebit ? styles.debitText : styles.creditText,
                       ]}
                     >
-                      {isDebit ? `- RM ${Math.abs(item.amount).toFixed(2)}` : `+ RM ${item.amount.toFixed(2)}`}
+                      {isDebit ? `- ${Math.abs(item.amount)} pts` : `+ ${item.amount} pts`}
                     </Text>
                   </View>
                 );
@@ -575,6 +618,13 @@ const styles = StyleSheet.create({
     fontFamily: Theme.typography.fontFamily.regular,
     fontSize: 16,
     color: Theme.colors.onSurfaceVariant,
+  },
+  myrSubtext: {
+    fontFamily: Theme.typography.fontFamily.medium,
+    fontSize: 12,
+    color: Theme.colors.onSurfaceVariant,
+    marginBottom: 16,
+    marginTop: -8,
   },
   buyButton: {
     backgroundColor: Theme.colors.pearlAqua,

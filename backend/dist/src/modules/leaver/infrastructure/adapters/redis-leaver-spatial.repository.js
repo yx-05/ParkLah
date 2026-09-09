@@ -39,7 +39,7 @@ let RedisLeaverSpatialRepository = class RedisLeaverSpatialRepository {
     async registerActiveLeaver(session) {
         if (this.redis) {
             await this.redis.geoadd(this.GEO_KEY, session.coordinates.longitude, session.coordinates.latitude, session.leaverId);
-            await this.redis.set(`${this.STATE_PREFIX}${session.leaverId}`, JSON.stringify(session), 'EX', session.countdownSeconds + 60);
+            await this.redis.set(`${this.STATE_PREFIX}${session.leaverId}`, JSON.stringify(session), 'EX', session.countdownSeconds === 0 ? 120 : session.countdownSeconds + 60);
         }
         return session;
     }

@@ -77,3 +77,30 @@
 - [ ] **Task 3.2: Google Maps Adapter Fallback Tests**
   - **File:** `backend/test/unit/gatekeeper/google-maps.adapter.spec.ts`
   - **Details:** Test live API responses and graceful fallback to Haversine routing on network timeouts.
+
+---
+
+## 4. Feature TODO: Machine Learning Matchmaking & Ranking Engine
+- **Specifications:** `planning/04_machine_learning.md`
+- **Parallel Subagent Execution Plan:** `planning/ml_task.md`
+- [x] **Track 1: ML Pipeline (Offline Synthetic Data & Model)**
+  - `scripts/ml/generate_synthetic_matches.py` (50,000 samples, calibrated log-odds ground truth)
+  - `scripts/ml/train_lightgbm.py` (LightGBM training, evaluation, validation, ONNX export with `zipmap=False`)
+  - Output artifact: `backend/src/modules/matchmaker/infrastructure/models/parklah_matchmaker_v1.onnx`
+  - Metadata: `backend/src/modules/matchmaker/infrastructure/models/feature_metadata.json`
+  - Performance: $\text{ROC-AUC} = 0.8807$, $\text{PR-AUC} = 0.9123$, $\text{ECE} = 0.0103$
+- [x] **Track 2: Geospatial & Routing Engine**
+  - `backend/src/modules/matchmaker/domain/services/pharos-candidate-filter.service.ts` (Geodesic bearing, angular divergence, 4-tier filtering)
+  - `backend/src/modules/matchmaker/domain/ports/road-routing.port.ts`
+  - `backend/src/modules/matchmaker/infrastructure/adapters/osrm-road-routing.adapter.ts` (OSRM `/table/v1/driving` with urban Haversine fallback)
+- [x] **Track 3: Telemetry Logging & Database Persistence**
+  - `backend/src/database/migrations/008_create_ml_match_features.sql` (Inference snapshot schema)
+  - `backend/src/modules/matchmaker/domain/ports/ml-feature-repository.port.ts`
+  - `backend/src/modules/matchmaker/infrastructure/repositories/postgres-ml-feature.repository.ts`
+  - `backend/src/modules/matchmaker/application/services/ml-feature-logger.service.ts` (Non-blocking async telemetry & outcome logger)
+- [x] **Track 4: NestJS Runtime Assembly & Cascading Dispatch**
+  - `backend/src/modules/matchmaker/infrastructure/adapters/onnx-ml-match-scoring.adapter.ts` (`onnxruntime-node` integration, $< 1\text{ms}$ latency)
+  - `backend/src/modules/matchmaker/infrastructure/services/candidate-discovery.service.ts` (Pharos filter + OSRM routing + LightGBM inference)
+  - `backend/src/modules/matchmaker/application/services/spatial-matchmaker.service.ts` (15s cascading lock waterfall, declined/timeout candidate exclusion)
+  - End-to-end unit and integration verification (20/20 test suites, 82/82 tests passing).
+

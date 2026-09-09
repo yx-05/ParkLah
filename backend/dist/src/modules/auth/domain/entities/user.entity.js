@@ -11,9 +11,10 @@ class UserEntity {
         this.phoneNumber = props.phoneNumber || null;
         this.email = props.email || null;
         this.fullName = props.fullName || 'ParkLah Driver';
-        this.authProvider = props.authProvider || (props.phoneNumber ? 'PHONE' : 'GOOGLE');
+        this.authProvider = props.authProvider || (props.phoneNumber ? 'PHONE' : (props.email ? 'EMAIL' : 'GOOGLE'));
         this.authProviderId = props.authProviderId || null;
         this.avatarUrl = props.avatarUrl || null;
+        this.passwordHash = props.passwordHash || null;
         this.reliabilityRating = props.reliabilityRating !== undefined ? Math.min(Math.max(props.reliabilityRating, 0), 5) : 5.0;
         this.totalCompletedMatches = props.totalCompletedMatches || 0;
         this.totalDisputesCount = props.totalDisputesCount || 0;

@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,52 +17,208 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Theme } from '@/constants/theme';
 import { GoogleIcon, FacebookIcon } from '@/components/SocialIcons';
 import { oauthService } from '@/services/OAuthService';
+import { apiService } from '@/services/ApiService';
+import { useUserStore } from '@/stores/useUserStore';
+import { SocketService } from '@/services/SocketService';
 
 import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const user = useUserStore((state) => state.user);
+  const hasHydrated = useUserStore((state) => state.hasHydrated);
+
+  // 1. Auto-navigate if session was restored from AsyncStorage
+  useEffect(() => {
+    if (hasHydrated && isAuthenticated && user) {
+      const socketUrl = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000';
+      const token = useUserStore.getState().authToken;
+      if (token) {
+        try {
+          SocketService.getInstance().connect(socketUrl, token);
+        } catch (sErr) {
+          console.warn('[LoginScreen] Socket connect error:', sErr);
+        }
+      }
+      const targetRoute = useUserStore.getState().lastRoute || '/selection';
+      router.replace(targetRoute as any);
+    }
+  }, [hasHydrated, isAuthenticated, user]);
+
+  // 2. Dev quick bypass login
+  const handleDevQuickLogin = () => {
+    setIsLoading(true);
+    try {
+      const devUser = {
+        id: 'usr_dev_tester',
+        email: 'dev.tester@parklah.my',
+        fullName: 'Dev Driver (Bypass)',
+        authProvider: 'DEV_MOCK',
+        reliabilityRating: 5.0,
+        totalCompletedMatches: 12,
+      };
+      const devTokens = {
+        accessToken: 'dev_mock_access_token_' + Date.now(),
+        refreshToken: 'dev_mock_refresh_token',
+        expiresIn: 86400 * 30,
+      };
+
+      useUserStore.getState().setAuth(devUser, devTokens);
+
+      const socketUrl = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000';
+      try {
+        SocketService.getInstance().connect(socketUrl, devTokens.accessToken);
+      } catch (sErr) {
+        console.warn('[DevLogin] Socket connect error:', sErr);
+      }
+
+      const targetRoute = useUserStore.getState().lastRoute || '/selection';
+      router.replace(targetRoute as any);
+    } catch (err: any) {
+      console.warn('[LoginScreen] Dev login error:', err);
+      Alert.alert('Dev Login Error', err.message || 'Failed to perform dev login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 3. Auto-login in development if EXPO_PUBLIC_DEV_AUTO_LOGIN is set to true
+  useEffect(() => {
+    if (
+      hasHydrated &&
+      !isAuthenticated &&
+      process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN === 'true'
+    ) {
+      handleDevQuickLogin();
+    }
+  }, [hasHydrated, isAuthenticated]);
 
   useEffect(() => {
+    // Only process deep links if hydrated and NOT already authenticated
+    if (!hasHydrated || isAuthenticated) {
+      return;
+    }
+
     // 1. Web callback
     oauthService.checkWebHashCallback().then((result) => {
       if (result) {
-        router.replace('/selection');
+        const targetRoute = useUserStore.getState().lastRoute || '/selection';
+        router.replace(targetRoute as any);
       }
-    }).catch(console.error);
+    }).catch((err: any) => {
+      console.warn('Web OAuth error:', err.message);
+      Alert.alert('Google Sign-In Failed', err.message || 'Authentication could not be completed.');
+    });
 
-    // 2. Mobile cold-start deep link callback
+    // 2. Mobile cold-start deep link callback (only if not consumed and not authenticated)
     Linking.getInitialURL().then((url) => {
-      if (url) {
+      if (url && !useUserStore.getState().isAuthenticated) {
         oauthService.handleDeepLinkUrl(url).then((res) => {
-          if (res) router.replace('/selection');
-        }).catch(console.error);
+          if (res) {
+            const targetRoute = useUserStore.getState().lastRoute || '/selection';
+            router.replace(targetRoute as any);
+          }
+        }).catch((err: any) => {
+          console.warn('Cold start auth non-fatal error:', err.message);
+        });
       }
     });
 
     // 3. Mobile active deep link listener (returning from Chrome / browser)
     const subscription = Linking.addEventListener('url', async ({ url }) => {
       try {
+        try {
+          WebBrowser.dismissAuthSession();
+        } catch {}
         const res = await oauthService.handleDeepLinkUrl(url);
         if (res) {
-          router.replace('/selection');
+          const targetRoute = useUserStore.getState().lastRoute || '/selection';
+          router.replace(targetRoute as any);
         }
       } catch (e: any) {
         console.warn('Deep link login handler error:', e.message);
+        Alert.alert('Google Sign-In Failed', e.message || 'Authentication could not be completed.');
       }
     });
 
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [hasHydrated, isAuthenticated]);
 
-  const handleLogin = () => {
-    // Navigate to Selection / Main flow
-    router.replace('/selection');
+  const handleLogin = async () => {
+    const cleanId = emailOrPhone.trim();
+    const cleanPass = password.trim();
+
+    if (!cleanId) {
+      Alert.alert('Required Field', 'Please enter your email or phone number.');
+      return;
+    }
+
+    if (!cleanPass) {
+      Alert.alert('Required Field', 'Please enter your password.');
+      return;
+    }
+
+    if (cleanPass.length < 6) {
+      Alert.alert('Invalid Password', 'Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (isSignUp && !fullName.trim()) {
+      Alert.alert('Required Field', 'Please enter your full name to create an account.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      let res: any;
+      if (isSignUp) {
+        res = await apiService.register({
+          fullName: fullName.trim(),
+          emailOrPhone: cleanId,
+          password: cleanPass,
+        });
+      } else {
+        res = await apiService.login({
+          emailOrPhone: cleanId,
+          password: cleanPass,
+        });
+      }
+
+      if (res && res.tokens && res.user) {
+        useUserStore.getState().setAuth(res.user, res.tokens);
+        const socketUrl = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000';
+        try {
+          SocketService.getInstance().connect(socketUrl, res.tokens.accessToken);
+        } catch (sErr) {
+          console.warn('[LoginScreen] Socket connect error:', sErr);
+        }
+        router.replace('/selection');
+      } else {
+        throw new Error('Authentication response did not return valid user session.');
+      }
+    } catch (err: any) {
+      console.warn('[LoginScreen] Authentication error:', err.message);
+      Alert.alert(
+        isSignUp ? 'Sign-Up Failed' : 'Login Failed',
+        err.message || 'Unable to authenticate. Please check your credentials.',
+      );
+      // Explicitly stay on screen - do NOT navigate on failure
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSocialLogin = async (provider: 'GOOGLE' | 'FACEBOOK') => {
@@ -94,12 +251,35 @@ export default function LoginScreen() {
             {/* Brand & Heading */}
             <View style={styles.headerContainer}>
               <Text style={styles.brandTitle}>ParkLah</Text>
-              <Text style={styles.welcomeTitle}>Welcome Back</Text>
-              <Text style={styles.subtitle}>Sign in to manage your parking.</Text>
+              <Text style={styles.welcomeTitle}>{isSignUp ? 'Create Account' : 'Welcome Back'}</Text>
+              <Text style={styles.subtitle}>
+                {isSignUp ? 'Sign up to start sharing and finding parking.' : 'Sign in to manage your parking.'}
+              </Text>
             </View>
 
             {/* Inputs */}
             <View style={styles.formContainer}>
+              {/* Full Name Input (Sign Up Only) */}
+              {isSignUp && (
+                <View style={styles.inputContainer}>
+                  <MaterialIcons
+                    name="badge"
+                    size={22}
+                    color={Theme.colors.outline}
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Full Name"
+                    placeholderTextColor={Theme.colors.outlineVariant}
+                    value={fullName}
+                    onChangeText={setFullName}
+                    autoCapitalize="words"
+                    editable={!isLoading}
+                  />
+                </View>
+              )}
+
               {/* Email/Phone Input */}
               <View style={styles.inputContainer}>
                 <MaterialIcons
@@ -116,6 +296,7 @@ export default function LoginScreen() {
                   onChangeText={setEmailOrPhone}
                   autoCapitalize="none"
                   keyboardType="email-address"
+                  editable={!isLoading}
                 />
               </View>
 
@@ -135,6 +316,7 @@ export default function LoginScreen() {
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
+                  editable={!isLoading}
                 />
                 <TouchableOpacity
                   style={styles.visibilityButton}
@@ -149,21 +331,47 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Forgot Password */}
-              <TouchableOpacity style={styles.forgotPasswordContainer} activeOpacity={0.7}>
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
+              {/* Forgot Password (Sign In Only) */}
+              {!isSignUp && (
+                <TouchableOpacity
+                  style={styles.forgotPasswordContainer}
+                  activeOpacity={0.7}
+                  onPress={() => Alert.alert('Password Recovery', 'Please contact support or sign in via Google OAuth to access your account.')}
+                >
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
+              )}
 
-              {/* Login Button */}
+              {/* Action Button */}
               <View style={styles.buttonWrapper}>
                 <TouchableOpacity
-                  style={styles.loginButton}
+                  style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
                   onPress={handleLogin}
                   activeOpacity={0.88}
+                  disabled={isLoading}
                 >
-                  <Text style={styles.loginButtonText}>LOGIN</Text>
-                  <MaterialIcons name="chevron-right" size={20} color={Theme.colors.stormyTeal} />
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color={Theme.colors.stormyTeal} />
+                  ) : (
+                    <>
+                      <Text style={styles.loginButtonText}>{isSignUp ? 'CREATE ACCOUNT' : 'LOGIN'}</Text>
+                      <MaterialIcons name="chevron-right" size={20} color={Theme.colors.stormyTeal} />
+                    </>
+                  )}
                 </TouchableOpacity>
+
+                {/* Dev Quick Bypass Button */}
+                {__DEV__ && (
+                  <TouchableOpacity
+                    style={styles.devQuickButton}
+                    onPress={handleDevQuickLogin}
+                    activeOpacity={0.8}
+                    disabled={isLoading}
+                  >
+                    <MaterialIcons name="bolt" size={18} color={Theme.colors.stormyTeal} />
+                    <Text style={styles.devQuickButtonText}>QUICK DEV LOGIN (BYPASS)</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
 
@@ -198,9 +406,14 @@ export default function LoginScreen() {
             {/* Footer */}
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                Don't have an account?{' '}
-                <Text style={styles.signUpText} onPress={handleLogin}>
-                  Sign Up
+                {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+                <Text
+                  style={styles.signUpText}
+                  onPress={() => {
+                    setIsSignUp(!isSignUp);
+                  }}
+                >
+                  {isSignUp ? 'Sign In' : 'Sign Up'}
                 </Text>
               </Text>
             </View>
@@ -316,11 +529,34 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  loginButtonDisabled: {
+    opacity: 0.65,
+  },
   loginButtonText: {
     fontFamily: Theme.typography.fontFamily.bold,
     fontSize: 14,
     color: Theme.colors.stormyTeal,
     letterSpacing: 2,
+  },
+  devQuickButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '80%',
+    height: 44,
+    backgroundColor: 'rgba(157, 224, 219, 0.22)',
+    borderRadius: Theme.borderRadius.full,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.pearlAqua,
+    borderStyle: 'dashed',
+    marginTop: 12,
+    gap: 6,
+  },
+  devQuickButtonText: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: 12,
+    color: Theme.colors.stormyTeal,
+    letterSpacing: 1,
   },
   dividerContainer: {
     flexDirection: 'row',

@@ -47,7 +47,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(180, { message: 'Countdown must be at least 180 seconds (3 minutes)' }),
+    (0, class_validator_1.Min)(0, { message: 'Countdown must be at least 0 seconds (0 for Instant broadcast)' }),
     (0, class_validator_1.Max)(300, { message: 'Countdown must be at most 300 seconds (5 minutes)' }),
     __metadata("design:type", Number)
 ], DepartureBroadcastDto.prototype, "countdownSeconds", void 0);

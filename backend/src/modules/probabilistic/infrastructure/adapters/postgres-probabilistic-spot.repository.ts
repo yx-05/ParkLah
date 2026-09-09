@@ -1,5 +1,6 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { Pool } from 'pg';
+import { getSharedPostgresPool } from '../../../../database/postgres-pool.helper';
 import {
   IProbabilisticSpotRepositoryPort,
   CandidateSpotResult,
@@ -14,13 +15,8 @@ export class PostgresProbabilisticSpotRepository implements IProbabilisticSpotRe
   constructor(@Optional() pool?: Pool) {
     if (pool) {
       this.pool = pool;
-    } else if (process.env.DATABASE_URL) {
-      const isSupabase = process.env.DATABASE_URL.includes('supabase') || process.env.DATABASE_SSL === 'true';
-      const connectionString = process.env.DATABASE_URL.replace('?sslmode=require', '').replace('&sslmode=require', '');
-      this.pool = new Pool({
-        connectionString,
-        ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
-      });
+    } else {
+      this.pool = getSharedPostgresPool();
     }
   }
 

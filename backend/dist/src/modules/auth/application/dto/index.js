@@ -23,7 +23,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateRoleDto = exports.CreateVehicleDto = exports.RefreshTokenDto = exports.VerifyOtpDto = exports.RequestOtpDto = void 0;
+exports.RegisterDto = exports.LoginDto = exports.UpdateRoleDto = exports.CreateVehicleDto = exports.RefreshTokenDto = exports.VerifyOtpDto = exports.RequestOtpDto = void 0;
 const class_validator_1 = require("class-validator");
 class RequestOtpDto {
 }
@@ -95,5 +95,36 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], UpdateRoleDto.prototype, "role", void 0);
+class LoginDto {
+}
+exports.LoginDto = LoginDto;
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], LoginDto.prototype, "emailOrPhone", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], LoginDto.prototype, "password", void 0);
+class RegisterDto {
+}
+exports.RegisterDto = RegisterDto;
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "fullName", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "emailOrPhone", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "password", void 0);
 __exportStar(require("./oauth-login.dto"), exports);
 //# sourceMappingURL=index.js.map

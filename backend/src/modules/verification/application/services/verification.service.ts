@@ -91,6 +91,20 @@ export class VerificationService {
         leaverUser.incrementCompletedMatches();
         await this.userRepository.update(leaverUser);
       }
+
+      // Real-time wallet balance notification via WebSocket
+      if (settlement) {
+        this.socketBroadcaster.emitWalletUpdate(
+          match.searcherId,
+          settlement.searcherBalanceAfter,
+          `RM ${settlement.searcherBalanceAfter.toFixed(2)}`,
+        );
+        this.socketBroadcaster.emitWalletUpdate(
+          match.leaverId,
+          settlement.leaverBalanceAfter,
+          `RM ${settlement.leaverBalanceAfter.toFixed(2)}`,
+        );
+      }
     }
 
     return {

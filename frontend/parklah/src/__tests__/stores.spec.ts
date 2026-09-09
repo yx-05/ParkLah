@@ -134,4 +134,34 @@ describe('Frontend Zustand Stores (Module 1 Unit Tests)', () => {
       expect(txs.length).toBeGreaterThanOrEqual(3);
     });
   });
+
+  describe('useUserStore', () => {
+    it('should manage authentication state and profile', () => {
+      const { useUserStore } = require('../stores/useUserStore');
+      useUserStore.getState().logout();
+      expect(useUserStore.getState().isAuthenticated).toBe(false);
+      expect(useUserStore.getState().user).toBeNull();
+
+      // Set Auth
+      useUserStore.getState().setAuth(
+        {
+          id: 'user-auth-test',
+          email: 'driver@test.com',
+          fullName: 'Driver One',
+          reliabilityRating: 5.0,
+        },
+        { accessToken: 'test-jwt-token', refreshToken: 'test-refresh-token' },
+      );
+
+      expect(useUserStore.getState().isAuthenticated).toBe(true);
+      expect(useUserStore.getState().user?.email).toBe('driver@test.com');
+      expect(useUserStore.getState().authToken).toBe('test-jwt-token');
+
+      // Logout
+      useUserStore.getState().logout();
+      expect(useUserStore.getState().isAuthenticated).toBe(false);
+      expect(useUserStore.getState().user).toBeNull();
+      expect(useUserStore.getState().authToken).toBeNull();
+    });
+  });
 });

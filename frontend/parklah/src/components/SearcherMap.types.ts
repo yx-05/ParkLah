@@ -9,6 +9,9 @@ export interface ParkingSpot {
   availableSpots: number;
   latitude: number;
   longitude: number;
+  isProbabilistic?: boolean;
+  confidenceScore?: number;
+  probabilityLabel?: string;
 }
 
 export interface SearcherMapProps {
@@ -25,4 +28,8 @@ export interface SearcherMapProps {
    * are never hidden or clipped by the opaque header.
    */
   headerHeight?: number;
+  /**
+   * Optional ETA string (e.g. '2 min' or '4 min') to display above the destination flag.
+   */
+  routeEta?: string;
 }

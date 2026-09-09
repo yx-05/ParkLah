@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const spatial_matchmaker_service_1 = require("../../../src/modules/matchmaker/application/services/spatial-matchmaker.service");
-const match_scoring_engine_1 = require("../../../src/modules/matchmaker/domain/services/match-scoring.engine");
 const candidate_discovery_service_1 = require("../../../src/modules/matchmaker/infrastructure/services/candidate-discovery.service");
 const in_memory_match_repository_1 = require("../../../src/modules/matchmaker/infrastructure/adapters/in-memory-match.repository");
 const in_memory_lock_adapter_1 = require("../../../src/modules/matchmaker/infrastructure/adapters/in-memory-lock.adapter");
@@ -13,6 +12,9 @@ const decay_engine_1 = require("../../../src/modules/probabilistic/domain/servic
 const socket_broadcaster_service_1 = require("../../../src/modules/gateway/application/services/socket-broadcaster.service");
 const room_manager_service_1 = require("../../../src/modules/gateway/infrastructure/services/room-manager.service");
 const match_status_enum_1 = require("../../../src/modules/matchmaker/domain/enums/match-status.enum");
+const pharos_candidate_filter_service_1 = require("../../../src/modules/matchmaker/domain/services/pharos-candidate-filter.service");
+const osrm_road_routing_adapter_1 = require("../../../src/modules/matchmaker/infrastructure/adapters/osrm-road-routing.adapter");
+const onnx_ml_match_scoring_adapter_1 = require("../../../src/modules/matchmaker/infrastructure/adapters/onnx-ml-match-scoring.adapter");
 describe('SpatialMatchmakerService (Module 5 Unit Tests)', () => {
     let matchmakerService;
     let matchRepo;
@@ -27,8 +29,10 @@ describe('SpatialMatchmakerService (Module 5 Unit Tests)', () => {
         lockAdapter = new in_memory_lock_adapter_1.InMemoryLockAdapter();
         searcherRepo = new in_memory_searcher_spatial_repository_1.InMemorySearcherSpatialRepository();
         userRepo = new in_memory_user_repository_1.InMemoryUserRepository();
-        const scoringEngine = new match_scoring_engine_1.MatchScoringEngine();
-        const candidateDiscovery = new candidate_discovery_service_1.CandidateDiscoveryService(searcherRepo, userRepo, scoringEngine);
+        const pharosFilter = new pharos_candidate_filter_service_1.PharosCandidateFilterService();
+        const roadRouting = new osrm_road_routing_adapter_1.OsrmRoadRoutingAdapter('http://localhost:59999', 100);
+        const mlScoring = new onnx_ml_match_scoring_adapter_1.OnnxMlMatchScoringAdapter();
+        const candidateDiscovery = new candidate_discovery_service_1.CandidateDiscoveryService(searcherRepo, userRepo, pharosFilter, roadRouting, mlScoring);
         const probRepo = new in_memory_probabilistic_spot_repository_1.InMemoryProbabilisticSpotRepository();
         const decayEngine = new decay_engine_1.DecayEngine();
         probabilisticService = new probabilistic_vacancy_service_1.ProbabilisticVacancyService(probRepo, decayEngine);

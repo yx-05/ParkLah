@@ -10,12 +10,18 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Theme } from '@/constants/theme';
 
 export type NavTab = 'selection' | 'searcher' | 'leaver' | 'points';
 
-export function FloatingNavBar({ state, navigation }: BottomTabBarProps) {
+export interface FloatingNavBarProps {
+  state: any;
+  navigation: any;
+  descriptors?: any;
+  insets?: any;
+}
+
+export function FloatingNavBar({ state, navigation }: FloatingNavBarProps) {
   const insets = useSafeAreaInsets();
   const currentRouteName = state?.routes[state.index]?.name || '';
 

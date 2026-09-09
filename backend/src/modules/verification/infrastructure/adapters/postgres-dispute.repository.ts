@@ -1,5 +1,6 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { Pool } from 'pg';
+import { getSharedPostgresPool } from '../../../../database/postgres-pool.helper';
 import { IDisputeRepositoryPort } from '../../domain/ports/dispute-repository.port';
 import { DisputeReportEntity } from '../../domain/entities/dispute-report.entity';
 import { DisputeType, DisputeStatus } from '../../domain/enums/dispute-type.enum';
@@ -11,13 +12,8 @@ export class PostgresDisputeRepository implements IDisputeRepositoryPort {
   constructor(@Optional() pool?: Pool) {
     if (pool) {
       this.pool = pool;
-    } else if (process.env.DATABASE_URL) {
-      const isSupabase = process.env.DATABASE_URL.includes('supabase') || process.env.DATABASE_SSL === 'true';
-      const connectionString = process.env.DATABASE_URL.replace('?sslmode=require', '').replace('&sslmode=require', '');
-      this.pool = new Pool({
-        connectionString,
-        ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
-      });
+    } else {
+      this.pool = getSharedPostgresPool();
     }
   }
 

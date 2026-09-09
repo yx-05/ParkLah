@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Optional } from '@nestjs/common';
 import {
   IMatchRepositoryPort,
   MATCH_REPOSITORY_PORT,
@@ -10,6 +10,7 @@ import {
 import { CandidateDiscoveryService } from '../../infrastructure/services/candidate-discovery.service';
 import { ProbabilisticVacancyService } from '../../../probabilistic/application/services/probabilistic-vacancy.service';
 import { SocketBroadcasterService } from '../../../gateway/application/services/socket-broadcaster.service';
+import { MlFeatureLoggerService } from './ml-feature-logger.service';
 import { MatchEntity } from '../../domain/entities/match.entity';
 import { MatchStatus } from '../../domain/enums/match-status.enum';
 import { LatLng } from '../../../gatekeeper/domain/ports/google-maps-routing.port';
@@ -21,10 +22,15 @@ export interface LeaverMatchRequest {
   countdownSeconds: number;
   vehicleSummary?: { makeModel: string; color: string; plateSuffix: string };
   landmarkNote?: string;
+  spotTypeEnum?: number;
+  excludedSearcherIds?: string[];
 }
 
 @Injectable()
 export class SpatialMatchmakerService {
+  public static readonly MIN_MATCH_PROBABILITY_CUTOFF = 0.40;
+  private readonly declinedSearchersBySpot: Map<string, Set<string>> = new Map();
+
   constructor(
     @Inject(MATCH_REPOSITORY_PORT)
     private readonly matchRepository: IMatchRepositoryPort,
@@ -33,23 +39,46 @@ export class SpatialMatchmakerService {
     private readonly candidateDiscovery: CandidateDiscoveryService,
     private readonly probabilisticService: ProbabilisticVacancyService,
     private readonly socketBroadcaster: SocketBroadcasterService,
+    @Optional()
+    private readonly mlFeatureLogger?: MlFeatureLoggerService,
   ) {}
 
   async findAndOfferMatch(request: LeaverMatchRequest): Promise<{
     matched: boolean;
     match?: MatchEntity;
     fallbackSpotId?: string;
+    predictedProbability?: number;
+    dispatchRank?: number;
   }> {
     const candidates = await this.candidateDiscovery.discoverAndRankCandidates(
       request.spotCoords,
       request.countdownSeconds,
-      1000,
+      1500,
+      {
+        landmarkNote: request.landmarkNote,
+        spotTypeEnum: request.spotTypeEnum,
+      },
     );
 
     const spotLockKey = `spot:${request.leaverId}:${request.spotCoords.latitude}_${request.spotCoords.longitude}`;
+    const declinedSet = this.declinedSearchersBySpot.get(spotLockKey) || new Set();
+    const excluded = new Set([
+      ...Array.from(declinedSet),
+      ...(request.excludedSearcherIds || []),
+    ]);
 
-    // Try pairing with top candidate
+    // Cascading Dispatch: Offer to highest-ranking candidate who passes cutoff
+    let rank = 1;
     for (const candidate of candidates) {
+      if (excluded.has(candidate.searcherId)) {
+        continue;
+      }
+
+      if (candidate.score < SpatialMatchmakerService.MIN_MATCH_PROBABILITY_CUTOFF) {
+        // All remaining candidates are below safety threshold
+        break;
+      }
+
       const lockAcquired = await this.distributedLock.acquireSpotLock(
         spotLockKey,
         candidate.searcherId,
@@ -69,6 +98,21 @@ export class SpatialMatchmakerService {
 
         const savedMatch = await this.matchRepository.createMatch(match);
 
+        // Telemetry Logging for Continual Learning Flywheel
+        if (this.mlFeatureLogger) {
+          this.mlFeatureLogger.logInferenceSnapshot({
+            matchId: savedMatch.id,
+            searcherId: candidate.searcherId,
+            leaverId: request.leaverId,
+            spotLatitude: request.spotCoords.latitude,
+            spotLongitude: request.spotCoords.longitude,
+            predictedProbability: candidate.score,
+            dispatchRank: rank,
+            modelVersion: 'lightgbm_v1_synthetic',
+            featurePayload: candidate.features,
+          });
+        }
+
         // Broadcast 15s match offer to searcher
         this.socketBroadcaster.emitMatchOffer(candidate.searcherId, {
           matchId: savedMatch.id,
@@ -83,11 +127,14 @@ export class SpatialMatchmakerService {
         return {
           matched: true,
           match: savedMatch,
+          predictedProbability: candidate.score,
+          dispatchRank: rank,
         };
       }
+      rank++;
     }
 
-    // Fallback: 0 active candidates or all locked -> Persist to Probabilistic DB
+    // Fallback: 0 active candidates or all locked/sub-threshold -> Persist to Probabilistic DB
     const fallbackSpot = await this.probabilisticService.persistVacatedSpot({
       leaverId: request.leaverId,
       latitude: request.spotCoords.latitude,
@@ -142,20 +189,40 @@ export class SpatialMatchmakerService {
     }
 
     const spotLockKey = `spot:${match.leaverId}:${match.spotLatitude}_${match.spotLongitude}`;
+    if (!this.declinedSearchersBySpot.has(spotLockKey)) {
+      this.declinedSearchersBySpot.set(spotLockKey, new Set());
+    }
+    this.declinedSearchersBySpot.get(spotLockKey)!.add(searcherId);
+
     await this.distributedLock.releaseSpotLock(spotLockKey);
 
     match.markDeclined();
-    return this.matchRepository.update(match);
+    const updated = await this.matchRepository.update(match);
+
+    if (this.mlFeatureLogger) {
+      this.mlFeatureLogger.recordOutcome(matchId, 0, 'DECLINED');
+    }
+
+    return updated;
   }
 
   async handleHandshakeTimeout(matchId: string): Promise<void> {
     const match = await this.matchRepository.findById(matchId);
     if (match && match.status === MatchStatus.OFFERED) {
       const spotLockKey = `spot:${match.leaverId}:${match.spotLatitude}_${match.spotLongitude}`;
+      if (!this.declinedSearchersBySpot.has(spotLockKey)) {
+        this.declinedSearchersBySpot.set(spotLockKey, new Set());
+      }
+      this.declinedSearchersBySpot.get(spotLockKey)!.add(match.searcherId);
+
       await this.distributedLock.releaseSpotLock(spotLockKey);
 
       match.markTimeout();
       await this.matchRepository.update(match);
+
+      if (this.mlFeatureLogger) {
+        this.mlFeatureLogger.recordOutcome(matchId, 0, 'HANDSHAKE_TIMEOUT');
+      }
 
       // Persist to probabilistic vacancy since live searcher timed out
       if (match.leaverId) {
@@ -165,6 +232,18 @@ export class SpatialMatchmakerService {
           longitude: match.spotLongitude,
         });
       }
+    }
+  }
+
+  async recordParkedSuccess(matchId: string): Promise<void> {
+    if (this.mlFeatureLogger) {
+      await this.mlFeatureLogger.recordOutcome(matchId, 1, 'PARKED_SUCCESS');
+    }
+  }
+
+  async recordSpotTakenFailure(matchId: string): Promise<void> {
+    if (this.mlFeatureLogger) {
+      await this.mlFeatureLogger.recordOutcome(matchId, 0, 'SPOT_TAKEN');
     }
   }
 

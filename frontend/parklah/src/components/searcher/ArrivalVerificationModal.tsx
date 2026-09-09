@@ -31,12 +31,12 @@ export const ArrivalVerificationModal: React.FC<ArrivalVerificationModalProps> =
 
           <TouchableOpacity style={styles.confirmBtn} onPress={onConfirmParked}>
             <Text style={styles.confirmBtnText}>✓ Parked Successfully</Text>
-            <Text style={styles.confirmBtnSubtext}>Complete handoff & settle RM 0.50</Text>
+            <Text style={styles.confirmBtnSubtext}>Complete handoff & settle 50 pts</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.spotTakenBtn} onPress={onReportSpotTaken}>
             <Text style={styles.spotTakenBtnText}>⚠️ Spot Taken by Someone Else</Text>
-            <Text style={styles.spotTakenBtnSubtext}>Zero charge (RM 0.00) & instant reroute</Text>
+            <Text style={styles.spotTakenBtnSubtext}>Zero charge (0 pts) & instant reroute</Text>
           </TouchableOpacity>
         </View>
       </View>

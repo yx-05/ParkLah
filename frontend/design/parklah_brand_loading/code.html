@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+<title>ParkLAH - Loading</title>
+<!-- Google Fonts: Lexend -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              teal: '#006d77',
+              aqua: '#83c5be',
+              dark: '#004d54',
+              soft: '#edf6f9',
+              bg: '#f6fbfb'
+            }
+          },
+          fontFamily: {
+            sans: ['Lexend', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-animations">
+    /* Subtle breathing scale animation for pin logo */
+    @keyframes subtlePulse {
+      0%, 100% {
+        transform: translateY(0px) scale(1);
+      }
+      50% {
+        transform: translateY(-4px) scale(1.02);
+      }
+    }
+
+    /* Dot wave bouncing & opacity keyframes */
+    @keyframes dotWave {
+      0%, 80%, 100% {
+        opacity: 0.35;
+        transform: scale(0.85);
+      }
+      40% {
+        opacity: 1;
+        transform: scale(1.25);
+      }
+    }
+
+    .animate-logo-float {
+      animation: subtlePulse 3s ease-in-out infinite;
+    }
+
+    .dot-bounce {
+      animation: dotWave 1.4s ease-in-out infinite both;
+    }
+
+    .dot-delay-1 {
+      animation-delay: 0.16s;
+    }
+
+    .dot-delay-2 {
+      animation-delay: 0.32s;
+    }
+
+    /* Ambient soft glow backdrop */
+    .bg-radial-glow {
+      background: radial-gradient(circle at 50% 48%, rgba(131, 197, 190, 0.18) 0%, rgba(246, 251, 251, 0) 65%);
+    }
+  </style>
+</head>
+<body class="bg-[#f7fafb] text-[#1b3b3e] font-sans antialiased m-0 p-0 overflow-hidden select-none min-h-screen">
+<!-- BEGIN: SplashScreen -->
+<main class="relative w-screen h-screen flex flex-col justify-between items-center px-6 py-12 bg-radial-glow" data-purpose="splash-screen-container">
+<!-- Top spacer matching iOS safe area -->
+<header aria-hidden="true" class="w-full pt-4 flex justify-center opacity-0 pointer-events-none">
+<div class="h-6 w-32"></div>
+</header>
+<!-- BEGIN: BrandCenter -->
+<!-- Centered identity block: Logo, Typography, and Loader -->
+<section class="flex flex-col items-center justify-center -mt-8" data-purpose="brand-presentation">
+<!-- App Pin Logo Icon -->
+<div class="w-full flex items-center justify-center animate-logo-float mb-6" data-purpose="brand-logo"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1RTxUotTWjHRMNH5mlLvBTwOY45H4CDz-V1J6Q1mh6XuU4psaNE2IMjktPGG_3HEjCRvHNPcN0TTr9dy11O9W79Mr_MtjQn3UftF04k_7nJtwiTFQsMn8KCOisRlKvl5WQEI6renPWBtx0ZiAFo4k6g3kXrUMSq6owbKhztmN6ZbKrfWS9cwnFAMpZ0xDum8mAtNBlluWrAhLR64YgWRKbwNfotU4m1fz20UC5wpjwlJ6eVvtaZisIePWA4rq_y-wkA" alt="ParkLah Logo" class="w-32 sm:w-36 h-auto max-h-40 object-contain mx-auto mix-blend-multiply drop-shadow-md bg-transparent border-0"></div><h1 class="text-[38px] font-bold text-[#006d77] tracking-tight leading-none mt-2 mb-3 text-center">ParkLah</h1>
+<!-- Brand Wordmark -->
+
+<!-- Elegant Sub-caption / Tagline -->
+<p class="mt-1 text-xs sm:text-sm font-medium tracking-wider uppercase text-brand-teal/60">We Make Parking Simple</p>
+<!-- Animated Modern Dot Loader -->
+
+</section>
+<!-- END: BrandCenter -->
+<!-- BEGIN: FooterStatus -->
+<!-- Minimalist bottom badge and iOS home indicator spacer -->
+<footer class="w-full flex flex-col items-center pb-2 text-center" data-purpose="footer-meta">
+
+<!-- iOS Home Bar clearance -->
+<div class="h-4"></div>
+</footer>
+<!-- END: FooterStatus -->
+</main>
+<!-- END: SplashScreen -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>

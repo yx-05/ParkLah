@@ -37,7 +37,7 @@ export class RedisLeaverSpatialRepository implements ILeaverSpatialRepositoryPor
         `${this.STATE_PREFIX}${session.leaverId}`,
         JSON.stringify(session),
         'EX',
-        session.countdownSeconds + 60,
+        session.countdownSeconds === 0 ? 120 : session.countdownSeconds + 60,
       );
     }
     return session;

@@ -101,5 +101,49 @@ describe('AuthService (Module 2 Unit Tests)', () => {
             await expect(authService.refreshToken('invalid.tampered.token')).rejects.toThrow(exceptions_1.AuthenticationException);
         });
     });
+    describe('register and login', () => {
+        it('should register a new user with email and password, hash password, and return JWT', async () => {
+            const reg = await authService.register({
+                fullName: 'Test Driver',
+                emailOrPhone: 'testdriver@parklah.com',
+                password: 'securePassword123',
+            });
+            expect(reg.tokens.accessToken).toBeDefined();
+            expect(reg.user.email).toBe('testdriver@parklah.com');
+            expect(reg.user.fullName).toBe('Test Driver');
+            expect(reg.user.authProvider).toBe('EMAIL');
+        });
+        it('should login successfully with registered credentials', async () => {
+            await authService.register({
+                fullName: 'Login Tester',
+                emailOrPhone: 'login@parklah.com',
+                password: 'myPassword888',
+            });
+            const res = await authService.login({
+                emailOrPhone: 'login@parklah.com',
+                password: 'myPassword888',
+            });
+            expect(res.tokens.accessToken).toBeDefined();
+            expect(res.user.email).toBe('login@parklah.com');
+            expect(res.user.fullName).toBe('Login Tester');
+        });
+        it('should reject login with wrong password', async () => {
+            await authService.register({
+                fullName: 'Wrong Pass',
+                emailOrPhone: 'wrongpass@parklah.com',
+                password: 'correctPassword',
+            });
+            await expect(authService.login({
+                emailOrPhone: 'wrongpass@parklah.com',
+                password: 'wrongPassword',
+            })).rejects.toThrow(exceptions_1.AuthenticationException);
+        });
+        it('should reject login for non-existent account', async () => {
+            await expect(authService.login({
+                emailOrPhone: 'nobody@nowhere.com',
+                password: 'anyPassword',
+            })).rejects.toThrow(exceptions_1.AuthenticationException);
+        });
+    });
 });
 //# sourceMappingURL=auth.service.spec.js.map

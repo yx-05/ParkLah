@@ -1,10 +1,34 @@
 import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from '../../application/services/auth.service';
-import { RequestOtpDto, VerifyOtpDto, RefreshTokenDto, OAuthLoginDto } from '../../application/dto';
+import { RequestOtpDto, VerifyOtpDto, RefreshTokenDto, OAuthLoginDto, LoginDto, RegisterDto } from '../../application/dto';
 
 @Controller('api/v1/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() dto: LoginDto) {
+    const result = await this.authService.login(dto);
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      data: result,
+      meta: { timestamp: new Date().toISOString() },
+    };
+  }
+
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() dto: RegisterDto) {
+    const result = await this.authService.register(dto);
+    return {
+      success: true,
+      statusCode: HttpStatus.CREATED,
+      data: result,
+      meta: { timestamp: new Date().toISOString() },
+    };
+  }
 
   @Post('otp/request')
   @HttpCode(HttpStatus.OK)

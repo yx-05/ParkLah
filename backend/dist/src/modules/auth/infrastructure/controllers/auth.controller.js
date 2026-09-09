@@ -20,6 +20,24 @@ let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
+    async login(dto) {
+        const result = await this.authService.login(dto);
+        return {
+            success: true,
+            statusCode: common_1.HttpStatus.OK,
+            data: result,
+            meta: { timestamp: new Date().toISOString() },
+        };
+    }
+    async register(dto) {
+        const result = await this.authService.register(dto);
+        return {
+            success: true,
+            statusCode: common_1.HttpStatus.CREATED,
+            data: result,
+            meta: { timestamp: new Date().toISOString() },
+        };
+    }
     async requestOtp(dto) {
         const result = await this.authService.requestOtp(dto);
         return {
@@ -67,6 +85,22 @@ let AuthController = class AuthController {
     }
 };
 exports.AuthController = AuthController;
+__decorate([
+    (0, common_1.Post)('login'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [dto_1.LoginDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('register'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [dto_1.RegisterDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)('otp/request'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

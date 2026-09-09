@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Theme } from '@/constants/theme';
 import { AppHeader } from '@/components/AppHeader';
+import { useUserStore } from '@/stores/useUserStore';
 
 export default function SelectionScreen() {
   const router = useRouter();
+
+  useEffect(() => {
+    useUserStore.getState().setLastRoute('/selection');
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>

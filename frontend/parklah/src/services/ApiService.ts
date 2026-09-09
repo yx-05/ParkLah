@@ -64,6 +64,20 @@ class ApiService {
   }
 
   // --- Auth Endpoints ---
+  async login(credentials: { emailOrPhone: string; password: string }): Promise<any> {
+    return this.request('/api/v1/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async register(data: { fullName: string; emailOrPhone: string; password: string }): Promise<any> {
+    return this.request('/api/v1/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   async requestOtp(phoneNumber: string): Promise<{ success: boolean; message: string; ttlSeconds: number }> {
     return this.request('/api/v1/auth/otp/request', {
       method: 'POST',
@@ -95,6 +109,20 @@ class ApiService {
         proximityLng: proximity?.longitude,
       }),
     });
+  }
+
+  async getProbabilisticCandidates(
+    coords: { latitude: number; longitude: number },
+    radiusMeters: number = 1000,
+  ): Promise<any[]> {
+    try {
+      const res = await this.request(
+        `/api/v1/spots/candidates?lat=${coords.latitude}&lng=${coords.longitude}&radius=${radiusMeters}`,
+      );
+      return res?.data?.candidates || res?.candidates || [];
+    } catch {
+      return [];
+    }
   }
 
   async evaluateDestination(

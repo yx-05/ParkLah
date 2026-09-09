@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostgresMatchRepository = void 0;
 const common_1 = require("@nestjs/common");
 const pg_1 = require("pg");
+const postgres_pool_helper_1 = require("../../../../database/postgres-pool.helper");
 const match_entity_1 = require("../../domain/entities/match.entity");
 let PostgresMatchRepository = class PostgresMatchRepository {
     constructor(pool) {
@@ -22,13 +23,8 @@ let PostgresMatchRepository = class PostgresMatchRepository {
         if (pool) {
             this.pool = pool;
         }
-        else if (process.env.DATABASE_URL) {
-            const isSupabase = process.env.DATABASE_URL.includes('supabase') || process.env.DATABASE_SSL === 'true';
-            const connectionString = process.env.DATABASE_URL.replace('?sslmode=require', '').replace('&sslmode=require', '');
-            this.pool = new pg_1.Pool({
-                connectionString,
-                ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
-            });
+        else {
+            this.pool = (0, postgres_pool_helper_1.getSharedPostgresPool)();
         }
     }
     async createMatch(match) {

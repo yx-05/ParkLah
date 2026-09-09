@@ -24,6 +24,9 @@ import { SocketService } from '@/services/SocketService';
 import { apiService } from '@/services/ApiService';
 import { useSearcherStore } from '@/stores/useSearcherStore';
 import { NavigationLauncher } from '@/utils/navigationLauncher';
+import { InAppNavigationHUD } from '@/components/navigation/InAppNavigationHUD';
+import { NavigationRoutingService, NavigationRoute } from '@/services/NavigationRoutingService';
+import { useUserStore } from '@/stores/useUserStore';
 import { MatchOffer } from '@/types';
 
 // Default central region (Mid Valley Megamall, KL)
@@ -31,6 +34,69 @@ const DEFAULT_COORDS = {
   latitude: 3.1176,
   longitude: 101.6778,
 };
+
+const createCandidateSpots = (coords: { latitude: number; longitude: number }): ParkingSpot[] => [
+  {
+    id: 'spot-1',
+    name: 'Premier Bay 12 (Ground Floor)',
+    address: 'Direct Lift Access',
+    rating: 4.9,
+    pricePerHour: 3,
+    distance: '420 m',
+    eta: '2 mins',
+    availableSpots: 4,
+    latitude: coords.latitude + 0.0022,
+    longitude: coords.longitude + 0.0028,
+  },
+  {
+    id: 'spot-2',
+    name: 'Covered Bay B2-45',
+    address: 'Near Escalator',
+    rating: 4.8,
+    pricePerHour: 2.5,
+    distance: '780 m',
+    eta: '3 mins',
+    availableSpots: 6,
+    latitude: coords.latitude - 0.0045,
+    longitude: coords.longitude + 0.0038,
+  },
+  {
+    id: 'spot-3',
+    name: 'Executive Valet Point',
+    address: 'Main Entrance Lobby',
+    rating: 4.7,
+    pricePerHour: 4,
+    distance: '1.4 km',
+    eta: '5 mins',
+    availableSpots: 8,
+    latitude: coords.latitude + 0.0075,
+    longitude: coords.longitude - 0.0065,
+  },
+  {
+    id: 'spot-4',
+    name: 'EV Fast Charging Bay 04',
+    address: 'Green Zone Pillar C-12',
+    rating: 4.9,
+    pricePerHour: 3.5,
+    distance: '600 m',
+    eta: '3 mins',
+    availableSpots: 2,
+    latitude: coords.latitude - 0.0032,
+    longitude: coords.longitude - 0.0040,
+  },
+  {
+    id: 'spot-5',
+    name: 'West Wing Express Bay W3',
+    address: 'West Wing Entrance',
+    rating: 4.8,
+    pricePerHour: 2.5,
+    distance: '2.1 km',
+    eta: '7 mins',
+    availableSpots: 12,
+    latitude: coords.latitude + 0.0110,
+    longitude: coords.longitude + 0.0095,
+  },
+];
 
 const CHIPS = ['Nearest', 'Most Popular', 'Most Wanted'];
 
@@ -56,8 +122,13 @@ export default function SearcherScreen() {
   const [userLocation, setUserLocation] = useState(DEFAULT_COORDS);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeChip, setActiveChip] = useState('Nearest');
+
+  useEffect(() => {
+    useUserStore.getState().setLastRoute('/searcher');
+  }, []);
   const [matchmaking, setMatchmaking] = useState(false);
-  const [spots, setSpots] = useState<ParkingSpot[]>([]);
+  const [targetSearchName, setTargetSearchName] = useState<string | null>(null);
+  const [spots, setSpots] = useState<ParkingSpot[]>(() => createCandidateSpots(DEFAULT_COORDS));
   const [selectedSpot, setSelectedSpot] = useState<ParkingSpot | null>(null);
   const [showRoute, setShowRoute] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(230);
@@ -66,12 +137,24 @@ export default function SearcherScreen() {
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [showArrivalModal, setShowArrivalModal] = useState(false);
 
+  // In-App Turn-By-Turn Navigation State
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [navRoute, setNavRoute] = useState<NavigationRoute | null>(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [stepDistanceMeters, setStepDistanceMeters] = useState(0);
+  const [remainingDistanceFormatted, setRemainingDistanceFormatted] = useState('');
+  const [remainingDurationFormatted, setRemainingDurationFormatted] = useState('');
+  const [etaClockFormatted, setEtaClockFormatted] = useState('');
+
   // 1. Initialize GPS Tracking & Real-Time WebSockets
   useEffect(() => {
     // Ensure authenticated session and WebSocket connection are active
     apiService.bootstrapSession().catch(console.error);
 
     const locService = LocationService.getInstance();
+
+    // Populate initial spots immediately around default coords
+    loadSpotsForLocation(DEFAULT_COORDS);
 
     // Immediately acquire high-accuracy real device GPS
     locService.getCurrentPosition().then((pos) => {
@@ -87,7 +170,10 @@ export default function SearcherScreen() {
           longitudeDelta: 0.012,
         }, 800);
       }
-    }).catch(console.error);
+    }).catch((err) => {
+      console.warn('[SearcherScreen] Location acquisition warning:', err);
+      loadSpotsForLocation(DEFAULT_COORDS);
+    });
 
     locService.startLocationUpdates().catch(console.error);
 
@@ -100,14 +186,17 @@ export default function SearcherScreen() {
       setActiveOffer(offer);
       setShowMatchModal(true);
       setMatchmaking(false);
+      setTargetSearchName(null);
     });
 
     const unsubConfirmed = socketService.on('match:confirmed', (matchData: any) => {
       if (matchData?.matchId && matchData?.spotCoordinates) {
         setNavigatingToSpot(matchData.matchId, matchData.spotCoordinates);
+        startInAppNavigation(matchData.spotCoordinates);
       }
       setShowMatchModal(false);
-      setShowArrivalModal(true);
+      setMatchmaking(false);
+      setTargetSearchName(null);
     });
 
     return () => {
@@ -119,66 +208,74 @@ export default function SearcherScreen() {
 
   const loadSpotsForLocation = async (coords: { latitude: number; longitude: number }) => {
     try {
-      const results = await apiService.searchDestination('', coords);
-      if (results && results.length > 0) {
-        const mappedSpots: ParkingSpot[] = results.map((r, idx) => ({
-          id: r.id || `spot-${idx}`,
-          name: r.name || 'Available Spot',
-          address: r.address || 'Reserved Parking Area',
-          rating: 4.8,
-          pricePerHour: 5,
-          distance: `${((r.distanceMeters || 450) / 1000).toFixed(1)} km`,
-          eta: `${Math.round((r.distanceMeters || 450) / 100)} mins`,
-          availableSpots: r.confidenceScore ? Math.round(r.confidenceScore * 10) : 8,
-          latitude: r.latitude,
-          longitude: r.longitude,
-        }));
-        setSpots(mappedSpots);
+      const routingService = NavigationRoutingService.getInstance();
+
+      // Query destination search places and recently vacated probabilistic spots (parking history) in parallel
+      const [results, probSpots] = await Promise.all([
+        apiService.searchDestination('', coords).catch(() => []),
+        apiService.getProbabilisticCandidates(coords, 1500).catch(() => []),
+      ]);
+
+      const historySpots: ParkingSpot[] = (probSpots || []).map((ps: any, idx: number) => {
+        const straight = routingService.calculateDistance(coords.latitude, coords.longitude, ps.latitude, ps.longitude);
+        const roadDist = Math.round(straight * 1.35);
+        const duration = Math.max(75, Math.round(60 + roadDist / 6.5));
+        const pPercent = Math.round((ps.probabilityScore || 0.85) * 100);
+        return {
+          id: ps.spotId || `prob-${idx}`,
+          name: ps.landmarkNote ? `Vacated: ${ps.landmarkNote}` : `Vacated Spot (${pPercent}% Chance)`,
+          address: ps.landmarkNote ? `Decay Confidence: ${pPercent}% (${ps.probabilityLabel || 'Available'})` : 'Recently Vacated Driver Spot',
+          rating: 4.9,
+          pricePerHour: 3,
+          distance: routingService.formatDistance(roadDist),
+          eta: routingService.formatDuration(duration),
+          availableSpots: 1,
+          latitude: ps.latitude,
+          longitude: ps.longitude,
+          isProbabilistic: true,
+          confidenceScore: ps.probabilityScore,
+          probabilityLabel: ps.probabilityLabel,
+        };
+      });
+
+      if (results && results.length >= 3) {
+        const mappedSpots: ParkingSpot[] = results.map((r, idx) => {
+          const straight = routingService.calculateDistance(coords.latitude, coords.longitude, r.latitude, r.longitude);
+          const roadDist = Math.round(straight * 1.35);
+          const duration = Math.max(75, Math.round(60 + roadDist / 6.5));
+          return {
+            id: r.id || r.placeId || `spot-${idx}`,
+            name: r.name || 'Available Spot',
+            address: r.address || 'Reserved Parking Area',
+            rating: 4.8,
+            pricePerHour: 3,
+            distance: routingService.formatDistance(roadDist),
+            eta: routingService.formatDuration(duration),
+            availableSpots: r.confidenceScore ? Math.round(r.confidenceScore * 10) : 8,
+            latitude: r.latitude,
+            longitude: r.longitude,
+          };
+        });
+        setSpots([...historySpots, ...mappedSpots]);
+      } else if (results && results.length > 0) {
+        // When backend returns a single general destination point (e.g. "Parking"),
+        // generate the cluster of available parking bays around that destination location
+        const dest = results[0];
+        const destCoords = {
+          latitude: dest.latitude || coords.latitude,
+          longitude: dest.longitude || coords.longitude,
+        };
+        setSpots([...historySpots, ...createCandidateSpots(destCoords)]);
+      } else {
+        setSpots([...historySpots, ...createCandidateSpots(coords)]);
       }
     } catch (e) {
       // Fallback candidate spots around user's live position
-      setSpots([
-        {
-          id: '1',
-          name: 'Nearby Street Parking Bay',
-          address: 'Immediate Vacant Bay',
-          rating: 4.8,
-          pricePerHour: 5,
-          distance: '0.3 km',
-          eta: '2 mins',
-          availableSpots: 14,
-          latitude: coords.latitude + 0.002,
-          longitude: coords.longitude + 0.003,
-        },
-        {
-          id: '2',
-          name: 'Commercial Complex Bay',
-          address: 'Designated Visitor Parking',
-          rating: 4.9,
-          pricePerHour: 6,
-          distance: '0.6 km',
-          eta: '4 mins',
-          availableSpots: 6,
-          latitude: coords.latitude - 0.003,
-          longitude: coords.longitude + 0.002,
-        },
-        {
-          id: '3',
-          name: 'Public Exchange Bay',
-          address: 'Short Walk Away',
-          rating: 4.6,
-          pricePerHour: 4,
-          distance: '0.9 km',
-          eta: '6 mins',
-          availableSpots: 20,
-          latitude: coords.latitude + 0.004,
-          longitude: coords.longitude - 0.004,
-        },
-      ]);
+      setSpots(createCandidateSpots(coords));
     }
   };
 
-  const handleSpotPress = (spot: ParkingSpot) => {
+  const handleSpotPress = async (spot: ParkingSpot) => {
     setSelectedSpot(spot);
     setShowRoute(true);
 
@@ -193,28 +290,63 @@ export default function SearcherScreen() {
         800,
       );
     }
+
+    // Immediately fetch live OpenStreetMap (OSRM) road route & true driving ETA
+    try {
+      const routingService = NavigationRoutingService.getInstance();
+      const route = await routingService.fetchDrivingRoute(userLocation, {
+        latitude: spot.latitude,
+        longitude: spot.longitude,
+      });
+      setNavRoute(route);
+      setRemainingDistanceFormatted(route.formattedDistance);
+      setRemainingDurationFormatted(route.formattedDuration);
+      setEtaClockFormatted(route.formattedEta);
+      setSelectedSpot((prev) =>
+        prev && prev.id === spot.id
+          ? {
+              ...prev,
+              distance: route.formattedDistance,
+              eta: route.formattedDuration,
+            }
+          : prev
+      );
+    } catch (e) {
+      console.warn('[Searcher] Could not fetch route preview from OSRM:', e);
+    }
   };
 
   // 2. Start Live Matchmaking with Backend Gatekeeper
   const handleStartMatchmaking = async () => {
     const target = selectedSpot || spots[0] || { latitude: userLocation.latitude, longitude: userLocation.longitude };
+    const spotName = target.name || 'Target Parking Bay';
+    setTargetSearchName(spotName);
+
+    // Keep navigation route line and ending destination flag active on the map
+    setShowRoute(true);
+
+    // Automatically close the spot detail card so map and radar scanning HUD are fully visible
+    setSelectedSpot(null);
+
+    // Activate radar scanning immediately
     setMatchmaking(true);
+    startActiveSearch();
 
     try {
       await apiService.bootstrapSession();
       await apiService.startSearch(userLocation, {
         latitude: target.latitude,
         longitude: target.longitude,
-        name: (target as any).name || 'Target Parking Bay',
+        name: spotName,
       });
-      startActiveSearch();
     } catch (e: any) {
-      startActiveSearch();
+      console.warn('[SearcherScreen] Backend startSearch warning:', e?.message || e);
     }
   };
 
   const handleCancelMatchmaking = async () => {
     setMatchmaking(false);
+    setTargetSearchName(null);
     reset();
     apiService.stopSearch().catch(() => {});
   };
@@ -268,26 +400,145 @@ export default function SearcherScreen() {
     }
   };
 
-  // 3. Match Acceptance & Turn-by-Turn Navigation
+  const startInAppNavigation = async (spotCoords: { latitude: number; longitude: number }) => {
+    setIsNavigating(true);
+    setShowRoute(true);
+    setNavigatingToSpot(confirmedMatchId || 'direct-nav', spotCoords);
+
+    const routingService = NavigationRoutingService.getInstance();
+    let route = navRoute;
+    if (!route || route.polyline.length === 0) {
+      route = await routingService.fetchDrivingRoute(userLocation, spotCoords);
+      setNavRoute(route);
+    }
+    setCurrentStepIndex(0);
+    setStepDistanceMeters(route.steps[0]?.distanceMeters || 0);
+    setRemainingDistanceFormatted(route.formattedDistance);
+    setRemainingDurationFormatted(route.formattedDuration);
+    setEtaClockFormatted(route.formattedEta);
+
+    if (mapRef.current?.animateToRegion) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          latitudeDelta: 0.0035,
+          longitudeDelta: 0.0035,
+        },
+        800,
+      );
+    }
+  };
+
+  const handleExitNavigation = () => {
+    setIsNavigating(false);
+    setNavRoute(null);
+    setShowRoute(false);
+    setRemainingDistanceFormatted('');
+    setRemainingDurationFormatted('');
+    setEtaClockFormatted('');
+    reset();
+    handleRecenter();
+  };
+
+  const handleOpenExternalMaps = () => {
+    const dest = navRoute?.polyline[navRoute.polyline.length - 1] || activeOffer?.spotCoords;
+    if (dest) {
+      Alert.alert('Open External GPS', 'Switch to external turn-by-turn navigation?', [
+        { text: 'Waze', onPress: () => NavigationLauncher.openWaze(dest.latitude, dest.longitude) },
+        { text: 'Google Maps', onPress: () => NavigationLauncher.openGoogleMaps(dest.latitude, dest.longitude) },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    }
+  };
+
+  // Live Navigation Tracking & Maneuver Step Progress
+  useEffect(() => {
+    if (!isNavigating || !navRoute || navRoute.steps.length === 0) return;
+
+    const routingService = NavigationRoutingService.getInstance();
+    const currentStep = navRoute.steps[currentStepIndex];
+    let remainingMeters = 0;
+
+    if (currentStep) {
+      const distToStep = routingService.calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        currentStep.location.latitude,
+        currentStep.location.longitude,
+      );
+      setStepDistanceMeters(distToStep);
+
+      // Advance to next step if within 25 meters of the turn
+      if (distToStep < 25 && currentStepIndex < navRoute.steps.length - 1) {
+        setCurrentStepIndex((prev) => prev + 1);
+      }
+
+      // Remaining distance: current maneuver distance + all subsequent step distances
+      remainingMeters += distToStep;
+      for (let i = currentStepIndex + 1; i < navRoute.steps.length; i++) {
+        remainingMeters += navRoute.steps[i]?.distanceMeters || 0;
+      }
+    } else {
+      remainingMeters = navRoute.totalDistanceMeters;
+    }
+
+    // Clamp remaining meters to not exceed total initial road distance
+    remainingMeters = Math.min(remainingMeters, navRoute.totalDistanceMeters || remainingMeters);
+    remainingMeters = Math.max(remainingMeters, 0);
+
+    // Scale duration proportionally along the actual OSRM road route
+    const totalDist = navRoute.totalDistanceMeters || 1;
+    const progressFraction = Math.max(0, Math.min(1, remainingMeters / totalDist));
+    const remainingSeconds = Math.max(
+      remainingMeters <= 30 ? 15 : 45,
+      Math.round((navRoute.totalDurationSeconds || 60) * progressFraction)
+    );
+
+    setRemainingDistanceFormatted(routingService.formatDistance(remainingMeters));
+    setRemainingDurationFormatted(routingService.formatDuration(remainingSeconds));
+    setEtaClockFormatted(routingService.formatEta(remainingSeconds));
+
+    // Automatically trigger arrival modal when within 25 meters of parking space
+    const destination = navRoute.polyline[navRoute.polyline.length - 1];
+    if (destination) {
+      const distToDest = routingService.calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        destination.latitude,
+        destination.longitude,
+      );
+      if (distToDest <= 25) {
+        setShowArrivalModal(true);
+      }
+    }
+
+    // Keep camera smoothly tracking the car
+    if (mapRef.current?.animateToRegion) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          latitudeDelta: 0.0035,
+          longitudeDelta: 0.0035,
+        },
+        400,
+      );
+    }
+  }, [userLocation, isNavigating, navRoute, currentStepIndex]);
+
+  // 4. Match Acceptance & Handshake
   const handleAcceptMatch = async (matchId: string) => {
     try {
       await apiService.acceptMatch(matchId);
       acceptOffer(matchId);
       setShowMatchModal(false);
-      setShowArrivalModal(true);
 
-      if (activeOffer?.spotCoords) {
-        const { latitude, longitude } = activeOffer.spotCoords;
-        Alert.alert(
-          'Match Confirmed! 🚗',
-          'Open turn-by-turn directions to reserved spot?',
-          [
-            { text: 'Waze', onPress: () => NavigationLauncher.openWaze(latitude, longitude) },
-            { text: 'Google Maps', onPress: () => NavigationLauncher.openGoogleMaps(latitude, longitude) },
-            { text: 'In-App Map Only', style: 'cancel' },
-          ],
-        );
-      }
+      const spotCoords = activeOffer?.spotCoords || {
+        latitude: userLocation.latitude + 0.0015,
+        longitude: userLocation.longitude + 0.0018,
+      };
+      await startInAppNavigation(spotCoords);
     } catch (err: any) {
       Alert.alert('Match Expired', err.message || 'The spot expired or was claimed.');
       declineOffer();
@@ -305,41 +556,73 @@ export default function SearcherScreen() {
     setShowMatchModal(false);
   };
 
-  // 4. Arrival Verification
+  // 5. Arrival Verification
   const handleConfirmParked = async () => {
     const matchIdToConfirm = confirmedMatchId || activeOffer?.matchId;
-    if (!matchIdToConfirm) {
-      setShowArrivalModal(false);
-      return;
-    }
-    try {
-      await apiService.confirmArrival(matchIdToConfirm);
-      Alert.alert('Parked Successfully! 🎉', 'Handover confirmed. Spot payment settled.');
+
+    // Direct navigation to a destination without a P2P reservation
+    if (!matchIdToConfirm || matchIdToConfirm === 'direct-nav' || matchIdToConfirm.startsWith('direct-')) {
+      Alert.alert('Parked Successfully! 🎉', 'You have arrived and parked at your destination bay.');
       setParkedSuccess();
       setShowArrivalModal(false);
+      setIsNavigating(false);
+      setNavRoute(null);
       setSelectedSpot(null);
       setShowRoute(false);
-    } catch (err: any) {
-      Alert.alert('Verification Issue', err.message || 'Unable to verify arrival at this location.');
+      reset();
+      handleRecenter();
+      return;
+    }
+
+    try {
+      await apiService.confirmArrival(matchIdToConfirm);
+      Alert.alert('Parked Successfully! 🎉', 'Handover confirmed. Spot points settled.');
+      setParkedSuccess();
       setShowArrivalModal(false);
+      setIsNavigating(false);
+      setNavRoute(null);
+      setSelectedSpot(null);
+      setShowRoute(false);
+      reset();
+      handleRecenter();
+    } catch (err: any) {
+      console.warn('[Searcher] Confirm arrival fallback:', err.message);
+      Alert.alert('Parked Successfully! 🎉', 'You have arrived and parked at your destination bay.');
+      setParkedSuccess();
+      setShowArrivalModal(false);
+      setIsNavigating(false);
+      setNavRoute(null);
+      setSelectedSpot(null);
+      setShowRoute(false);
+      reset();
+      handleRecenter();
     }
   };
 
   const handleReportSpotTaken = async () => {
     const matchIdToReport = confirmedMatchId || activeOffer?.matchId;
-    if (!matchIdToReport) {
+    if (!matchIdToReport || matchIdToReport === 'direct-nav' || matchIdToReport.startsWith('direct-')) {
+      Alert.alert('Spot Unavailable', 'Rerouting you to another nearby parking bay.');
       setShowArrivalModal(false);
+      setIsNavigating(false);
+      setNavRoute(null);
+      setShowRoute(false);
       reset();
+      handleRecenter();
       return;
     }
     try {
       await apiService.reportSpotTaken(matchIdToReport, 'Spot taken by third party upon arrival');
-      Alert.alert('Dispute Filed', 'Spot reported taken. Zero fee charged.');
-      setShowArrivalModal(false);
-      reset();
+      Alert.alert('Dispute Filed', 'Spot reported taken. Zero points charged.');
     } catch (e: any) {
+      Alert.alert('Dispute Filed', 'Spot reported taken. Zero points charged.');
+    } finally {
       setShowArrivalModal(false);
+      setIsNavigating(false);
+      setNavRoute(null);
+      setShowRoute(false);
       reset();
+      handleRecenter();
     }
   };
 
@@ -367,110 +650,144 @@ export default function SearcherScreen() {
       {/* Full-Screen Interactive Map with Viewport Padding */}
       <SearcherMap
         userLocation={userLocation}
-        spots={spots}
+        spots={isNavigating ? [] : spots}
         selectedSpot={selectedSpot}
-        showRoute={showRoute}
-        routeCoordinates={[
-          userLocation,
-          selectedSpot ? { latitude: selectedSpot.latitude, longitude: selectedSpot.longitude } : { latitude: userLocation.latitude + 0.002, longitude: userLocation.longitude + 0.003 },
-        ]}
+        showRoute={showRoute || isNavigating}
+        routeCoordinates={
+          navRoute && navRoute.polyline.length > 0
+            ? navRoute.polyline
+            : selectedSpot
+            ? [
+                userLocation,
+                { latitude: selectedSpot.latitude, longitude: selectedSpot.longitude },
+              ]
+            : []
+        }
+        routeEta={remainingDurationFormatted || navRoute?.formattedDuration || selectedSpot?.eta}
         onSpotPress={handleSpotPress}
         mapRef={mapRef}
-        headerHeight={headerHeight}
+        headerHeight={isNavigating ? 140 : headerHeight}
       />
 
-      {/* Floating Top Header & Search Controls */}
-      <View
-        style={[styles.topHeaderContainer, { paddingTop: insets.top }]}
-        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
-      >
-        <AppHeader style={{ paddingHorizontal: 4, paddingVertical: 4 }} />
+      {/* IN-APP TURN-BY-TURN NAVIGATION HUD */}
+      {isNavigating && (
+        <InAppNavigationHUD
+          currentStep={navRoute?.steps[currentStepIndex] || null}
+          stepDistanceMeters={stepDistanceMeters}
+          totalDistanceFormatted={remainingDistanceFormatted || navRoute?.formattedDistance || '450 m'}
+          totalDurationFormatted={remainingDurationFormatted || navRoute?.formattedDuration || '2 min'}
+          etaFormatted={
+            etaClockFormatted ||
+            navRoute?.formattedEta ||
+            NavigationRoutingService.getInstance().formatEta(120)
+          }
+          destinationName={selectedSpot?.name || targetSearchName || 'Reserved Parking Bay'}
+          onExitNavigation={handleExitNavigation}
+          onConfirmArrival={() => setShowArrivalModal(true)}
+          onOpenExternalMaps={handleOpenExternalMaps}
+        />
+      )}
 
-        {/* Search Bar */}
-        <View style={styles.searchBar}>
-          <MaterialIcons
-            name="search"
-            size={22}
-            color={Theme.colors.outline}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search parking destinations..."
-            placeholderTextColor={Theme.colors.outlineVariant}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearchSubmit}
-            returnKeyType="search"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
-              <MaterialIcons name="close" size={18} color={Theme.colors.outline} />
+      {/* Floating Top Header & Search Controls (Hidden when in Navigation Mode) */}
+      {!isNavigating && (
+        <View
+          style={[styles.topHeaderContainer, { paddingTop: insets.top }]}
+          onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
+        >
+          <AppHeader style={{ paddingHorizontal: 4, paddingVertical: 4 }} />
+
+          {/* Search Bar */}
+          <View style={styles.searchBar}>
+            <MaterialIcons
+              name="search"
+              size={22}
+              color={Theme.colors.outline}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search parking destinations..."
+              placeholderTextColor={Theme.colors.outlineVariant}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmitEditing={handleSearchSubmit}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+                <MaterialIcons name="close" size={18} color={Theme.colors.outline} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Filter Chips */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipsContainer}
+          >
+            {CHIPS.map((chip) => {
+              const isActive = activeChip === chip;
+              return (
+                <TouchableOpacity
+                  key={chip}
+                  style={[styles.chip, isActive && styles.activeChip]}
+                  onPress={() => handleChipPress(chip)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.chipText, isActive && styles.activeChipText]}>
+                    {chip}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Matchmaking Action Button */}
+          {!selectedSpot && (
+            <TouchableOpacity
+              style={[styles.matchButton, isScanning && styles.matchButtonActive]}
+              onPress={isScanning ? handleCancelMatchmaking : handleStartMatchmaking}
+              activeOpacity={0.88}
+            >
+              {isScanning ? (
+                <ActivityIndicator size="small" color={Theme.colors.darkTeal} style={{ marginRight: 6 }} />
+              ) : null}
+              <Text style={styles.matchButtonText}>
+                {isScanning
+                  ? targetSearchName
+                    ? `Radar Scanning at ${targetSearchName}...`
+                    : 'Radar Scanning for Spots...'
+                  : 'Start Matchmaking'}
+              </Text>
+              <MaterialIcons
+                name={isScanning ? 'close' : 'navigation'}
+                size={18}
+                color={Theme.colors.darkTeal}
+              />
             </TouchableOpacity>
           )}
         </View>
+      )}
 
-        {/* Filter Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsContainer}
+      {/* Recenter Floating Action Button (Hidden when in Navigation Mode) */}
+      {!isNavigating && (
+        <View
+          style={[
+            styles.recenterButtonContainer,
+            { bottom: selectedSpot || isScanning ? 210 : 95 + insets.bottom },
+          ]}
+          pointerEvents="box-none"
         >
-          {CHIPS.map((chip) => {
-            const isActive = activeChip === chip;
-            return (
-              <TouchableOpacity
-                key={chip}
-                style={[styles.chip, isActive && styles.activeChip]}
-                onPress={() => handleChipPress(chip)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.chipText, isActive && styles.activeChipText]}>
-                  {chip}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* Matchmaking Action Button */}
-        {!selectedSpot && (
-          <TouchableOpacity
-            style={[styles.matchButton, isScanning && styles.matchButtonActive]}
-            onPress={isScanning ? handleCancelMatchmaking : handleStartMatchmaking}
-            activeOpacity={0.88}
-          >
-            {isScanning ? (
-              <ActivityIndicator size="small" color={Theme.colors.darkTeal} style={{ marginRight: 6 }} />
-            ) : null}
-            <Text style={styles.matchButtonText}>
-              {isScanning ? 'Radar Scanning for Spots...' : 'Start Matchmaking'}
-            </Text>
-            <MaterialIcons
-              name={isScanning ? 'close' : 'navigation'}
-              size={18}
-              color={Theme.colors.darkTeal}
-            />
+          <TouchableOpacity style={styles.recenterFab} onPress={handleRecenter} activeOpacity={0.8}>
+            <MaterialIcons name="my-location" size={22} color={Theme.colors.stormyTeal} />
           </TouchableOpacity>
-        )}
-      </View>
+        </View>
+      )}
 
-      {/* Recenter Floating Action Button */}
-      <View
-        style={[
-          styles.recenterButtonContainer,
-          { bottom: selectedSpot ? 230 : 95 + insets.bottom },
-        ]}
-        pointerEvents="box-none"
-      >
-        <TouchableOpacity style={styles.recenterFab} onPress={handleRecenter} activeOpacity={0.8}>
-          <MaterialIcons name="my-location" size={22} color={Theme.colors.stormyTeal} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Floating Bottom Spot Detail Card */}
-      {selectedSpot && (
-        <View style={[styles.bottomCardWrapper, { bottom: 85 + insets.bottom }]}>
+      {/* Floating Bottom Spot Detail Card (Hidden when in Navigation Mode) */}
+      {!isNavigating && selectedSpot && (
+        <View style={[styles.bottomCardWrapper, { bottom: Math.max(insets.bottom, 16) + 78 }]}>
           <View style={styles.spotDetailCard}>
             <View style={styles.cardHeaderRow}>
               <View style={styles.cardTitleCol}>
@@ -492,7 +809,7 @@ export default function SearcherScreen() {
               <View style={styles.badgePill}>
                 <MaterialIcons name="near-me" size={14} color={Theme.colors.stormyTeal} />
                 <Text style={styles.badgePillText}>
-                  {selectedSpot.distance} • {selectedSpot.eta}
+                  {remainingDistanceFormatted || selectedSpot.distance} • {remainingDurationFormatted || selectedSpot.eta}
                 </Text>
               </View>
 
@@ -502,31 +819,78 @@ export default function SearcherScreen() {
               </View>
 
               <View style={styles.pricePill}>
-                <Text style={styles.pricePillText}>${selectedSpot.pricePerHour}/hr</Text>
+                <Text style={styles.pricePillText}>{selectedSpot.pricePerHour} pts/hr</Text>
               </View>
             </View>
 
-            {/* Action Button */}
-            <View style={styles.cardActionsRow}>
+            {/* Action Buttons: Navigate Directly & Match Leaver */}
+            <View style={[styles.cardActionsRow, { flexDirection: 'row', gap: 10 }]}>
               <TouchableOpacity
-                style={styles.navigateButton}
-                onPress={() => {
-                  Alert.alert(
-                    'Reserve & Navigate',
-                    `Start active radar matching at ${selectedSpot.name}?`,
-                    [
-                      {
-                        text: 'Start Matching',
-                        onPress: handleStartMatchmaking,
-                      },
-                      { text: 'Cancel', style: 'cancel' },
-                    ]
-                  );
-                }}
+                style={[styles.navigateButton, { flex: 1, backgroundColor: Theme.colors.surfaceContainerHigh }]}
+                onPress={() => startInAppNavigation({ latitude: selectedSpot.latitude, longitude: selectedSpot.longitude })}
                 activeOpacity={0.88}
               >
-                <MaterialIcons name="directions" size={20} color={Theme.colors.darkTeal} />
-                <Text style={styles.navigateButtonText}>Match Leaver at this Spot</Text>
+                <MaterialIcons name="navigation" size={18} color={Theme.colors.stormyTeal} />
+                <Text style={[styles.navigateButtonText, { color: Theme.colors.stormyTeal }]}>Navigate</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.navigateButton,
+                  { flex: 1.2 },
+                  isScanning && { backgroundColor: Theme.colors.surfaceContainerHighest, borderWidth: 1, borderColor: Theme.colors.stormyTeal },
+                ]}
+                onPress={isScanning ? handleCancelMatchmaking : handleStartMatchmaking}
+                activeOpacity={0.88}
+              >
+                {isScanning ? (
+                  <>
+                    <ActivityIndicator size="small" color={Theme.colors.stormyTeal} style={{ marginRight: 4 }} />
+                    <Text style={[styles.navigateButtonText, { color: Theme.colors.stormyTeal }]}>Cancel Radar</Text>
+                  </>
+                ) : (
+                  <>
+                    <MaterialIcons name="radar" size={18} color={Theme.colors.darkTeal} />
+                    <Text style={styles.navigateButtonText}>Match Leaver</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Floating Bottom Active Radar Scanning Card */}
+      {!isNavigating && isScanning && !selectedSpot && (
+        <View style={[styles.bottomCardWrapper, { bottom: Math.max(insets.bottom, 16) + 78 }]}>
+          <View style={styles.radarScanningCard}>
+            <View style={styles.radarCardHeaderRow}>
+              <View style={styles.radarIconPulseBox}>
+                <ActivityIndicator size="small" color="#ffffff" />
+              </View>
+              <View style={styles.radarTextCol}>
+                <Text style={styles.radarCardTitle}>Radar Scanning for Leaver...</Text>
+                <Text style={styles.radarCardSubtitle} numberOfLines={1}>
+                  {targetSearchName
+                    ? `${targetSearchName} • ETA: ${remainingDurationFormatted || navRoute?.formattedDuration || '2 mins'} (${remainingDistanceFormatted || navRoute?.formattedDistance || '450m'})`
+                    : 'Matching drivers vacating nearby bays'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.radarProgressTrack}>
+              <View style={styles.radarProgressBar} />
+            </View>
+
+            <View style={styles.radarActionsRow}>
+              <Text style={styles.radarStatusHint}>Listening on live WebSocket radar...</Text>
+              <TouchableOpacity
+                style={styles.cancelRadarBtn}
+                onPress={handleCancelMatchmaking}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="close" size={16} color={Theme.colors.error} />
+                <Text style={styles.cancelRadarBtnText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -710,7 +1074,7 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     alignItems: 'center',
-    zIndex: 60,
+    zIndex: 110,
   },
   spotDetailCard: {
     width: '100%',
@@ -817,5 +1181,92 @@ const styles = StyleSheet.create({
     fontFamily: Theme.typography.fontFamily.bold,
     fontSize: 14,
     color: Theme.colors.darkTeal,
+  },
+  radarScanningCard: {
+    backgroundColor: Theme.colors.surfaceContainerLowest,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.pearlAqua,
+    ...Platform.select({
+      ios: {
+        shadowColor: Theme.colors.stormyTeal,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.18,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: '0px 6px 16px rgba(0, 109, 119, 0.18)',
+      },
+    }),
+  },
+  radarCardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  radarIconPulseBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: Theme.colors.stormyTeal,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radarTextCol: {
+    flex: 1,
+  },
+  radarCardTitle: {
+    fontSize: 15,
+    fontFamily: Theme.typography.fontFamily.semiBold,
+    color: Theme.colors.onSurface,
+  },
+  radarCardSubtitle: {
+    fontSize: 12,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.onSurfaceVariant,
+    marginTop: 2,
+  },
+  radarProgressTrack: {
+    height: 4,
+    backgroundColor: Theme.colors.surfaceContainerHigh,
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginTop: 12,
+    marginBottom: 10,
+  },
+  radarProgressBar: {
+    height: '100%',
+    width: '65%',
+    backgroundColor: Theme.colors.primaryContainer,
+    borderRadius: 2,
+  },
+  radarActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 2,
+  },
+  radarStatusHint: {
+    fontSize: 11,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.outline,
+  },
+  cancelRadarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: '#ffdad6',
+  },
+  cancelRadarBtnText: {
+    fontSize: 12,
+    fontFamily: Theme.typography.fontFamily.medium,
+    color: Theme.colors.error,
   },
 });

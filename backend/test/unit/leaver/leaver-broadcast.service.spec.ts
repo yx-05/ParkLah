@@ -47,7 +47,21 @@ describe('LeaverBroadcastService (Module 4 Unit Tests)', () => {
     expect(eventPublisher.publishedEvents[0].event.countdownSeconds).toBe(240);
   });
 
-  it('should reject countdowns outside the 180s-300s window with ValidationException', async () => {
+  it('should accept instant departure broadcast with 0s countdown', async () => {
+    const leaverId = 'leaver-user-1';
+    const session = await leaverService.broadcastDeparture(leaverId, {
+      coordinates: { latitude: 3.139, longitude: 101.686 },
+      countdownSeconds: 0,
+      landmarkNote: 'Vacating immediately',
+    });
+
+    expect(session.leaverId).toBe(leaverId);
+    expect(session.countdownSeconds).toBe(0);
+    expect(session.remainingSeconds).toBe(0);
+    expect(eventPublisher.publishedEvents.some((e) => e.event.countdownSeconds === 0)).toBe(true);
+  });
+
+  it('should reject countdowns outside the 0s or 180s-300s window with ValidationException', async () => {
     const leaverId = 'leaver-user-1';
 
     // Too short (120s = 2 min)

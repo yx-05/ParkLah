@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostgresUserRepository = void 0;
 const common_1 = require("@nestjs/common");
 const pg_1 = require("pg");
+const postgres_pool_helper_1 = require("../../../../database/postgres-pool.helper");
 const user_entity_1 = require("../../domain/entities/user.entity");
 let PostgresUserRepository = class PostgresUserRepository {
     constructor(pool) {
@@ -22,13 +23,8 @@ let PostgresUserRepository = class PostgresUserRepository {
         if (pool) {
             this.pool = pool;
         }
-        else if (process.env.DATABASE_URL) {
-            const isSupabase = process.env.DATABASE_URL.includes('supabase') || process.env.DATABASE_SSL === 'true';
-            const connectionString = process.env.DATABASE_URL.replace('?sslmode=require', '').replace('&sslmode=require', '');
-            this.pool = new pg_1.Pool({
-                connectionString,
-                ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
-            });
+        else {
+            this.pool = (0, postgres_pool_helper_1.getSharedPostgresPool)();
         }
     }
     async findById(id) {
@@ -66,8 +62,8 @@ let PostgresUserRepository = class PostgresUserRepository {
     async create(user) {
         if (!this.pool)
             return user;
-        await this.pool.query(`INSERT INTO users (id, phone_number, email, full_name, auth_provider, auth_provider_id, avatar_url, reliability_rating, total_completed_matches, total_disputes_count, is_active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`, [
+        await this.pool.query(`INSERT INTO users (id, phone_number, email, full_name, auth_provider, auth_provider_id, avatar_url, reliability_rating, total_completed_matches, total_disputes_count, is_active, password_hash, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`, [
             user.id,
             user.phoneNumber,
             user.email ? user.email.toLowerCase() : null,
@@ -79,6 +75,7 @@ let PostgresUserRepository = class PostgresUserRepository {
             user.totalCompletedMatches,
             user.totalDisputesCount,
             user.isActive,
+            user.passwordHash || null,
             user.createdAt,
             user.updatedAt,
         ]);
@@ -98,7 +95,8 @@ let PostgresUserRepository = class PostgresUserRepository {
         total_completed_matches = $9,
         total_disputes_count = $10,
         is_active = $11,
-        updated_at = $12
+        password_hash = $12,
+        updated_at = $13
        WHERE id = $1`, [
             user.id,
             user.phoneNumber,
@@ -111,6 +109,7 @@ let PostgresUserRepository = class PostgresUserRepository {
             user.totalCompletedMatches,
             user.totalDisputesCount,
             user.isActive,
+            user.passwordHash || null,
             user.updatedAt,
         ]);
         return user;
@@ -124,6 +123,7 @@ let PostgresUserRepository = class PostgresUserRepository {
             authProvider: row.auth_provider,
             authProviderId: row.auth_provider_id,
             avatarUrl: row.avatar_url,
+            passwordHash: row.password_hash || null,
             reliabilityRating: parseFloat(row.reliability_rating),
             totalCompletedMatches: parseInt(row.total_completed_matches, 10),
             totalDisputesCount: parseInt(row.total_disputes_count, 10),

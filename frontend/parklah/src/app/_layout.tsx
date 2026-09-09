@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -10,6 +10,7 @@ import {
   Lexend_700Bold,
 } from '@expo-google-fonts/lexend';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { BrandLoadingScreen } from '@/components/BrandLoadingScreen';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,6 +26,8 @@ export default function RootLayout() {
     Lexend_600SemiBold,
     Lexend_700Bold,
   });
+
+  const [showBrandSplash, setShowBrandSplash] = useState(true);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
@@ -47,8 +50,13 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="index" />
+        <Stack.Screen name="auth-callback" />
         <Stack.Screen name="(tabs)" />
       </Stack>
+
+      {showBrandSplash && (
+        <BrandLoadingScreen onFinish={() => setShowBrandSplash(false)} />
+      )}
     </SafeAreaProvider>
   );
 }

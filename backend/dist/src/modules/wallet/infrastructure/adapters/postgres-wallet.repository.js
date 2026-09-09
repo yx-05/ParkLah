@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostgresWalletRepository = void 0;
 const common_1 = require("@nestjs/common");
 const pg_1 = require("pg");
+const postgres_pool_helper_1 = require("../../../../database/postgres-pool.helper");
 const wallet_entity_1 = require("../../domain/entities/wallet.entity");
 const ledger_transaction_entity_1 = require("../../domain/entities/ledger-transaction.entity");
 let PostgresWalletRepository = class PostgresWalletRepository {
@@ -23,13 +24,8 @@ let PostgresWalletRepository = class PostgresWalletRepository {
         if (pool) {
             this.pool = pool;
         }
-        else if (process.env.DATABASE_URL) {
-            const isSupabase = process.env.DATABASE_URL.includes('supabase') || process.env.DATABASE_SSL === 'true';
-            const connectionString = process.env.DATABASE_URL.replace('?sslmode=require', '').replace('&sslmode=require', '');
-            this.pool = new pg_1.Pool({
-                connectionString,
-                ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
-            });
+        else {
+            this.pool = (0, postgres_pool_helper_1.getSharedPostgresPool)();
         }
     }
     async findByUserId(userId) {

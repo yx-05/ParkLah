@@ -48,12 +48,12 @@ export class RedisSearcherSpatialRepository implements ISearcherSpatialRepositor
     if (this.redis) {
       // 1. Add to Geospatial index
       await this.redis.geoadd(this.GEO_KEY, currentCoords.longitude, currentCoords.latitude, searcherId);
-      // 2. Save full state with 60s TTL
+      // 2. Save full state with 300s (5m) TTL
       await this.redis.set(
         `${this.STATE_PREFIX}${searcherId}`,
         JSON.stringify(session),
         'EX',
-        60,
+        300,
       );
     }
 
@@ -71,7 +71,7 @@ export class RedisSearcherSpatialRepository implements ISearcherSpatialRepositor
         `${this.STATE_PREFIX}${searcherId}`,
         JSON.stringify(existing),
         'EX',
-        60,
+        300,
       );
     }
   }

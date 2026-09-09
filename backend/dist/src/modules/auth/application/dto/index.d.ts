@@ -17,4 +17,13 @@ export declare class CreateVehicleDto {
 export declare class UpdateRoleDto {
     role: 'SEARCHER' | 'LEAVER';
 }
+export declare class LoginDto {
+    emailOrPhone: string;
+    password: string;
+}
+export declare class RegisterDto {
+    fullName: string;
+    emailOrPhone: string;
+    password: string;
+}
 export * from './oauth-login.dto';

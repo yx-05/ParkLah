@@ -52,7 +52,7 @@ export const LeaverBroadcastModal: React.FC<LeaverBroadcastModalProps> = ({
             </TouchableOpacity>
           </View>
           <Text style={styles.subtitle}>
-            Broadcast to nearby drivers and earn RM 0.25 when a driver parks!
+            Broadcast to nearby drivers and earn 25 pts when a driver parks!
           </Text>
 
           {/* Vehicle info */}
@@ -68,22 +68,27 @@ export const LeaverBroadcastModal: React.FC<LeaverBroadcastModalProps> = ({
           {/* Countdown Selector */}
           <Text style={styles.sectionLabel}>When will you drive out?</Text>
           <View style={styles.minsRow}>
-            {[3, 4, 5].map((mins) => (
+            {[
+              { label: '⚡ Instant', mins: 0 },
+              { label: '3 Mins', mins: 3 },
+              { label: '4 Mins', mins: 4 },
+              { label: '5 Mins', mins: 5 },
+            ].map((opt) => (
               <TouchableOpacity
-                key={mins}
+                key={opt.mins}
                 style={[
                   styles.minsBtn,
-                  selectedMins === mins && styles.minsBtnActive,
+                  selectedMins === opt.mins && styles.minsBtnActive,
                 ]}
-                onPress={() => setSelectedMins(mins)}
+                onPress={() => setSelectedMins(opt.mins)}
               >
                 <Text
                   style={[
                     styles.minsBtnText,
-                    selectedMins === mins && styles.minsBtnTextActive,
+                    selectedMins === opt.mins && styles.minsBtnTextActive,
                   ]}
                 >
-                  {mins} Mins
+                  {opt.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -128,7 +133,9 @@ export const LeaverBroadcastModal: React.FC<LeaverBroadcastModalProps> = ({
             onPress={handleStartBroadcast}
           >
             <Text style={styles.broadcastBtnText}>
-              Broadcast Departure ({selectedMins}m countdown)
+              {selectedMins === 0
+                ? '⚡ Instant Broadcast (Leaving Now)'
+                : `Broadcast Departure (${selectedMins}m countdown)`}
             </Text>
           </TouchableOpacity>
         </View>
@@ -196,7 +203,7 @@ const styles = StyleSheet.create({
   },
   minsRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     marginBottom: 16,
   },
   minsBtn: {
@@ -208,15 +215,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.surfaceWhite,
+    paddingHorizontal: 2,
   },
   minsBtnActive: {
     borderColor: Colors.primary,
     backgroundColor: '#F0FDFA',
   },
   minsBtnText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: Colors.textSecondary,
+    textAlign: 'center',
   },
   minsBtnTextActive: {
     color: Colors.primaryDark,

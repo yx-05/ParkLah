@@ -22,13 +22,45 @@ let MockGoogleMapsRoutingAdapter = class MockGoogleMapsRoutingAdapter {
         this.mockedDurationSeconds = null;
     }
     async searchPlace(query, proximity) {
+        const baseLat = proximity ? proximity.latitude : 3.1176;
+        const baseLng = proximity ? proximity.longitude : 101.6778;
+        const cleanQuery = query && query.trim().length > 0 ? query.trim() : 'Parking';
+        const tag = cleanQuery.toLowerCase().replace(/\s+/g, '_');
         return [
             {
-                placeId: `place_${query.toLowerCase().replace(/\s+/g, '_')}`,
-                name: query,
-                address: `${query}, Kuala Lumpur, Malaysia`,
-                latitude: proximity ? proximity.latitude + 0.005 : 3.139,
-                longitude: proximity ? proximity.longitude + 0.005 : 101.6869,
+                placeId: `place_${tag}_1`,
+                name: `${cleanQuery} Premier Bay 12`,
+                address: 'Direct Lift Lobby Access, Level 1',
+                latitude: baseLat + 0.0022,
+                longitude: baseLng + 0.0028,
+            },
+            {
+                placeId: `place_${tag}_2`,
+                name: `${cleanQuery} Covered Bay B2-45`,
+                address: 'Near Main Escalator, Basement 2',
+                latitude: baseLat - 0.0045,
+                longitude: baseLng + 0.0038,
+            },
+            {
+                placeId: `place_${tag}_3`,
+                name: `${cleanQuery} Executive Valet Bay`,
+                address: 'Main Entrance Lobby, Ground Floor',
+                latitude: baseLat + 0.0075,
+                longitude: baseLng - 0.0065,
+            },
+            {
+                placeId: `place_${tag}_4`,
+                name: `${cleanQuery} EV Charging Bay 04`,
+                address: 'Green Zone Pillar C-12, Level 2',
+                latitude: baseLat - 0.0032,
+                longitude: baseLng - 0.0040,
+            },
+            {
+                placeId: `place_${tag}_5`,
+                name: `${cleanQuery} Express Bay W3`,
+                address: 'West Wing Entrance, Ground Floor',
+                latitude: baseLat + 0.0110,
+                longitude: baseLng + 0.0095,
             },
         ];
     }

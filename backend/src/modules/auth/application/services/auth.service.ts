@@ -1,11 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
+import * as crypto from 'crypto';
 import { IUserRepositoryPort, USER_REPOSITORY_PORT } from '../../domain/ports/user-repository.port';
 import { ISmsGatewayPort, SMS_GATEWAY_PORT } from '../../domain/ports/sms-gateway.port';
 import { IOtpCachePort, OTP_CACHE_PORT } from '../../domain/ports/otp-cache.port';
 import { UserEntity } from '../../domain/entities/user.entity';
-import { RequestOtpDto, VerifyOtpDto, OAuthLoginDto } from '../dto';
-import { AuthenticationException, RateLimitException } from '../../../../common/exceptions';
+import { RequestOtpDto, VerifyOtpDto, OAuthLoginDto, LoginDto, RegisterDto } from '../dto';
+import { AuthenticationException, RateLimitException, ValidationException } from '../../../../common/exceptions';
 
 export interface AuthTokens {
   accessToken: string;
@@ -255,6 +256,143 @@ export class AuthService {
     } catch (e) {
       throw new AuthenticationException('Invalid or expired access token');
     }
+  }
+
+  public hashPassword(password: string): string {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+    return `${salt}:${hash}`;
+  }
+
+  public verifyPassword(password: string, combinedHash: string): boolean {
+    const [salt, hash] = combinedHash.split(':');
+    if (!salt || !hash) return false;
+    const testHash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+    try {
+      return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(testHash, 'hex'));
+    } catch {
+      return false;
+    }
+  }
+
+  private normalizeIdentifier(input: string): { isEmail: boolean; normalized: string } {
+    const trimmed = input.trim();
+    if (trimmed.includes('@')) {
+      return { isEmail: true, normalized: trimmed.toLowerCase() };
+    }
+    let phone = trimmed.replace(/[\s\-]/g, '');
+    if (phone.startsWith('01')) {
+      phone = '+6' + phone;
+    } else if (phone.startsWith('601')) {
+      phone = '+' + phone;
+    }
+    return { isEmail: false, normalized: phone };
+  }
+
+  async login(dto: LoginDto): Promise<AuthResult> {
+    const { isEmail, normalized } = this.normalizeIdentifier(dto.emailOrPhone);
+    let user: UserEntity | null = null;
+
+    if (isEmail) {
+      user = await this.userRepository.findByEmail(normalized);
+    } else {
+      user = await this.userRepository.findByPhoneNumber(normalized);
+    }
+
+    if (!user) {
+      throw new AuthenticationException('Account not found. Please check your credentials or create an account.');
+    }
+
+    if (user.passwordHash) {
+      const isValid = this.verifyPassword(dto.password, user.passwordHash);
+      if (!isValid) {
+        throw new AuthenticationException('Incorrect password. Please check your credentials.');
+      }
+    } else {
+      // User created via OAuth or initial seed without password - set password on first login
+      user.passwordHash = this.hashPassword(dto.password);
+      await this.userRepository.update(user);
+    }
+
+    const tokens = this.generateTokens(user);
+
+    await this.otpCache.storeSession(
+      user.id,
+      {
+        userId: user.id,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        authProvider: user.authProvider,
+        issuedAt: Date.now(),
+      },
+      7 * 24 * 3600,
+    );
+
+    return {
+      tokens,
+      user: {
+        id: user.id,
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+        fullName: user.fullName,
+        authProvider: user.authProvider,
+        avatarUrl: user.avatarUrl,
+        reliabilityRating: user.reliabilityRating,
+      },
+    };
+  }
+
+  async register(dto: RegisterDto): Promise<AuthResult> {
+    const { isEmail, normalized } = this.normalizeIdentifier(dto.emailOrPhone);
+
+    if (isEmail) {
+      const existing = await this.userRepository.findByEmail(normalized);
+      if (existing) {
+        throw new ValidationException('An account with this email already exists. Please log in.');
+      }
+    } else {
+      const existing = await this.userRepository.findByPhoneNumber(normalized);
+      if (existing) {
+        throw new ValidationException('An account with this phone number already exists. Please log in.');
+      }
+    }
+
+    const user = new UserEntity({
+      email: isEmail ? normalized : null,
+      phoneNumber: !isEmail ? normalized : null,
+      fullName: dto.fullName?.trim() || 'ParkLah Driver',
+      authProvider: isEmail ? 'EMAIL' : 'PHONE',
+      passwordHash: this.hashPassword(dto.password),
+      reliabilityRating: 5.0,
+    });
+
+    const created = await this.userRepository.create(user);
+    const tokens = this.generateTokens(created);
+
+    await this.otpCache.storeSession(
+      created.id,
+      {
+        userId: created.id,
+        email: created.email,
+        phoneNumber: created.phoneNumber,
+        authProvider: created.authProvider,
+        issuedAt: Date.now(),
+      },
+      7 * 24 * 3600,
+    );
+
+    return {
+      tokens,
+      user: {
+        id: created.id,
+        phoneNumber: created.phoneNumber,
+        email: created.email,
+        fullName: created.fullName,
+        authProvider: created.authProvider,
+        avatarUrl: created.avatarUrl,
+        reliabilityRating: created.reliabilityRating,
+      },
+    };
   }
 
   private generate6DigitOtp(): string {

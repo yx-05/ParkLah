@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Colors } from '../../constants/theme';
 import { MatchOffer } from '../../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface MatchOfferModalProps {
   visible: boolean;
@@ -22,6 +23,7 @@ export const MatchOfferModal: React.FC<MatchOfferModalProps> = ({
   onAccept,
   onDecline,
 }) => {
+  const insets = useSafeAreaInsets();
   const [secondsLeft, setSecondsLeft] = useState(15);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export const MatchOfferModal: React.FC<MatchOfferModalProps> = ({
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 20) + 12 }]}>
           {/* Header & 15s Timer */}
           <View style={styles.header}>
             <View>
@@ -93,7 +95,7 @@ export const MatchOfferModal: React.FC<MatchOfferModalProps> = ({
             ) : null}
             <View style={styles.row}>
               <Text style={styles.label}>Handoff Fee</Text>
-              <Text style={styles.valueFee}>RM 0.50 (on completion)</Text>
+              <Text style={styles.valueFee}>50 pts (on completion)</Text>
             </View>
           </View>
 

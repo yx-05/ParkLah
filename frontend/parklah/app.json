@@ -21,11 +21,6 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyExampleGoogleMapsKeyHere"
-        }
-      },
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -41,7 +36,11 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

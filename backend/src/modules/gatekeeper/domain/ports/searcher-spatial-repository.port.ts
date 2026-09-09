@@ -10,6 +10,9 @@ export interface ActiveSearcherSession {
   radiusMeters: number;
   registeredAt: Date;
   lastHeartbeat: Date;
+  headingDegrees?: number;
+  speedKmh?: number;
+  gpsAccuracyMeters?: number;
 }
 
 export interface ISearcherSpatialRepositoryPort {

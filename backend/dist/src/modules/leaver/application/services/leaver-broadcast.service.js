@@ -28,11 +28,14 @@ let LeaverBroadcastService = class LeaverBroadcastService {
         this.spatialMatchmaker = spatialMatchmaker;
     }
     async broadcastDeparture(leaverId, dto) {
-        if (dto.countdownSeconds < 180 || dto.countdownSeconds > 300) {
-            throw new exceptions_1.ValidationException('Departure countdown must be between 180s (3m) and 300s (5m)');
+        const isInstant = dto.countdownSeconds === 0;
+        const isValidWindow = dto.countdownSeconds >= 180 && dto.countdownSeconds <= 300;
+        if (!isInstant && !isValidWindow) {
+            throw new exceptions_1.ValidationException('Departure countdown must be 0s (Instant broadcast) or between 180s (3m) and 300s (5m)');
         }
         const now = new Date();
-        const expiresAt = new Date(now.getTime() + (dto.countdownSeconds + 60) * 1000);
+        const sessionDurationSeconds = isInstant ? 120 : dto.countdownSeconds + 60;
+        const expiresAt = new Date(now.getTime() + sessionDurationSeconds * 1000);
         const session = {
             leaverId,
             coordinates: {

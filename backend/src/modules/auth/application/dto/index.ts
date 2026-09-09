@@ -59,4 +59,28 @@ export class UpdateRoleDto {
   role: 'SEARCHER' | 'LEAVER';
 }
 
+export class LoginDto {
+  @IsNotEmpty()
+  @IsString()
+  emailOrPhone: string;
+
+  @IsNotEmpty()
+  @IsString()
+  password: string;
+}
+
+export class RegisterDto {
+  @IsNotEmpty()
+  @IsString()
+  fullName: string;
+
+  @IsNotEmpty()
+  @IsString()
+  emailOrPhone: string;
+
+  @IsNotEmpty()
+  @IsString()
+  password: string;
+}
+
 export * from './oauth-login.dto';

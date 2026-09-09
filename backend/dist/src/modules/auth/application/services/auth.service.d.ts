@@ -2,7 +2,7 @@ import { IUserRepositoryPort } from '../../domain/ports/user-repository.port';
 import { ISmsGatewayPort } from '../../domain/ports/sms-gateway.port';
 import { IOtpCachePort } from '../../domain/ports/otp-cache.port';
 import { UserEntity } from '../../domain/entities/user.entity';
-import { RequestOtpDto, VerifyOtpDto, OAuthLoginDto } from '../dto';
+import { RequestOtpDto, VerifyOtpDto, OAuthLoginDto, LoginDto, RegisterDto } from '../dto';
 export interface AuthTokens {
     accessToken: string;
     refreshToken: string;
@@ -43,5 +43,10 @@ export declare class AuthService {
         phoneNumber?: string;
         email?: string;
     };
+    hashPassword(password: string): string;
+    verifyPassword(password: string, combinedHash: string): boolean;
+    private normalizeIdentifier;
+    login(dto: LoginDto): Promise<AuthResult>;
+    register(dto: RegisterDto): Promise<AuthResult>;
     private generate6DigitOtp;
 }
