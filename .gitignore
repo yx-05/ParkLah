@@ -6,6 +6,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Node dependencies
+node_modules/
+**/node_modules/
+
 # OS Files
 .DS_Store
 Thumbs.db

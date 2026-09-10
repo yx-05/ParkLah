@@ -101,14 +101,98 @@ class ApiService {
 
   // --- Searcher Endpoints ---
   async searchDestination(query: string, proximity?: { latitude: number; longitude: number }): Promise<any[]> {
-    return this.request('/api/v1/searcher/destination/search', {
-      method: 'POST',
-      body: JSON.stringify({
-        query: query && query.trim().length > 0 ? query : 'Parking',
-        proximityLat: proximity?.latitude,
-        proximityLng: proximity?.longitude,
-      }),
-    });
+    const cleanQuery = query && query.trim().length > 0 ? query.trim() : 'Parking';
+
+    // 1. Try backend search endpoint first
+    try {
+      const res = await this.request('/api/v1/searcher/destination/search', {
+        method: 'POST',
+        body: JSON.stringify({
+          query: cleanQuery,
+          proximityLat: proximity?.latitude,
+          proximityLng: proximity?.longitude,
+        }),
+      });
+
+      const data = (res as any)?.data || res || [];
+      if (Array.isArray(data) && data.length > 0) {
+        return data;
+      }
+    } catch (err) {
+      console.warn('[ApiService] Backend destination search failed, using direct Photon geocoding:', err);
+    }
+
+    // 2. Direct client-side geocoding fallback via Photon
+    try {
+      let photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(cleanQuery)}&limit=10`;
+      if (proximity) {
+        photonUrl += `&lat=${proximity.latitude}&lon=${proximity.longitude}`;
+      }
+
+      const pRes = await fetch(photonUrl, {
+        headers: { 'User-Agent': 'ParkLah/1.0' },
+      });
+
+      if (pRes.ok) {
+        const pData: any = await pRes.json();
+        if (Array.isArray(pData.features) && pData.features.length > 0) {
+          return pData.features.map((f: any, idx: number) => {
+            const props = f.properties || {};
+            const coords = f.geometry?.coordinates || [101.6778, 3.1176];
+            const baseName = props.name || props.street || cleanQuery;
+            const area = props.district || props.city || props.street;
+            const name = area && !baseName.toLowerCase().includes(area.toLowerCase())
+              ? `${baseName} - ${area}`
+              : baseName;
+            const addressParts = [
+              props.street,
+              props.district,
+              props.city,
+              props.state,
+              props.country,
+            ].filter(Boolean);
+            const address = addressParts.length > 0 ? addressParts.join(', ') : baseName;
+
+            return {
+              id: props.osm_id ? `osm_${props.osm_id}` : `search_${idx}`,
+              placeId: props.osm_id ? `osm_${props.osm_id}` : `place_${idx}`,
+              name,
+              address,
+              latitude: coords[1],
+              longitude: coords[0],
+            };
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[ApiService] Direct Photon fallback failed:', e);
+    }
+
+    // 3. Fallback known Malaysian landmarks
+    const KNOWN_DESTINATIONS = [
+      { name: 'Mid Valley Megamall', address: 'Lingkaran Syed Putra, Mid Valley City, 59200 Kuala Lumpur', latitude: 3.1176, longitude: 101.6778 },
+      { name: 'Pavilion Kuala Lumpur', address: '168 Jalan Bukit Bintang, 55100 Kuala Lumpur', latitude: 3.1488, longitude: 101.7133 },
+      { name: 'Suria KLCC', address: '241 Suria KLCC, Kuala Lumpur City Centre, 50088 Kuala Lumpur', latitude: 3.1578, longitude: 101.7120 },
+      { name: '1 Utama Shopping Centre', address: '1 Lebuh Bandar Utama, Bandar Utama, 47800 Petaling Jaya', latitude: 3.1502, longitude: 101.6152 },
+      { name: 'Sunway Pyramid', address: '3 Jalan PJS 11/15, Bandar Sunway, 47500 Subang Jaya', latitude: 3.0733, longitude: 101.6074 },
+      { name: 'KL Sentral', address: 'Kuala Lumpur Sentral, Brickfields, 50470 Kuala Lumpur', latitude: 3.1342, longitude: 101.6861 },
+      { name: 'The Exchange TRX', address: 'Persiaran TRX, Tun Razak Exchange, 55188 Kuala Lumpur', latitude: 3.1428, longitude: 101.7191 },
+      { name: 'IOI City Mall', address: 'Lebuh IRC, IOI Resort City, 62502 Putrajaya', latitude: 2.9702, longitude: 101.7144 },
+    ];
+
+    const matches = KNOWN_DESTINATIONS.filter((item) =>
+      item.name.toLowerCase().includes(cleanQuery.toLowerCase()) ||
+      item.address.toLowerCase().includes(cleanQuery.toLowerCase())
+    );
+
+    return matches.map((m, idx) => ({
+      id: `fallback_${idx}`,
+      placeId: `known_${idx}`,
+      name: m.name,
+      address: m.address,
+      latitude: m.latitude,
+      longitude: m.longitude,
+    }));
   }
 
   async getProbabilisticCandidates(
@@ -119,7 +203,7 @@ class ApiService {
       const res = await this.request(
         `/api/v1/spots/candidates?lat=${coords.latitude}&lng=${coords.longitude}&radius=${radiusMeters}`,
       );
-      return res?.data?.candidates || res?.candidates || [];
+      return (res as any)?.data?.candidates || (res as any)?.candidates || [];
     } catch {
       return [];
     }

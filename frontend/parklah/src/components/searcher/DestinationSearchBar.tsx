@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -6,9 +6,11 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { Colors } from '../../constants/theme';
 import { Destination } from '../../types';
+import { apiService } from '../../services/ApiService';
 
 interface DestinationSearchBarProps {
   onSelectDestination: (dest: Destination) => void;
@@ -22,24 +24,39 @@ export const DestinationSearchBar: React.FC<DestinationSearchBarProps> = ({
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Destination[]>([]);
   const [isFocused, setIsFocused] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const debounceRef = useRef<any>(null);
 
-  const mockSuggestions: Destination[] = [
-    { name: 'Mid Valley Megamall', latitude: 3.1176, longitude: 101.6778 },
-    { name: 'Pavilion Kuala Lumpur', latitude: 3.1488, longitude: 101.7133 },
-    { name: 'Suria KLCC', latitude: 3.1578, longitude: 101.712 },
-    { name: '1 Utama Shopping Centre', latitude: 3.1502, longitude: 101.6152 },
-    { name: 'Sunway Pyramid', latitude: 3.0733, longitude: 101.6074 },
-  ];
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const handleSearch = (text: string) => {
     setQuery(text);
-    if (text.length > 1) {
-      const filtered = mockSuggestions.filter((item) =>
-        item.name.toLowerCase().includes(text.toLowerCase()),
-      );
-      setSuggestions(filtered);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (text.trim().length > 1) {
+      setIsLoading(true);
+      debounceRef.current = setTimeout(async () => {
+        try {
+          const results = await apiService.searchDestination(text.trim());
+          const mapped: Destination[] = (results || []).map((r: any) => ({
+            name: r.name,
+            latitude: Number(r.latitude),
+            longitude: Number(r.longitude),
+          }));
+          setSuggestions(mapped);
+        } catch {
+          setSuggestions([]);
+        } finally {
+          setIsLoading(false);
+        }
+      }, 300);
     } else {
       setSuggestions([]);
+      setIsLoading(false);
     }
   };
 
@@ -53,6 +70,8 @@ export const DestinationSearchBar: React.FC<DestinationSearchBarProps> = ({
   const handleClear = () => {
     setQuery('');
     setSuggestions([]);
+    setIsLoading(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     if (onClear) onClear();
   };
 

@@ -9,6 +9,8 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  FlatList,
+  Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -121,10 +123,19 @@ export default function SearcherScreen() {
 
   const [userLocation, setUserLocation] = useState(DEFAULT_COORDS);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchDebounceRef = useRef<any>(null);
   const [activeChip, setActiveChip] = useState('Nearest');
 
   useEffect(() => {
     useUserStore.getState().setLastRoute('/searcher');
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
   }, []);
   const [matchmaking, setMatchmaking] = useState(false);
   const [targetSearchName, setTargetSearchName] = useState<string | null>(null);
@@ -276,16 +287,21 @@ export default function SearcherScreen() {
   };
 
   const handleSpotPress = async (spot: ParkingSpot) => {
+    setShowSuggestions(false);
+    Keyboard.dismiss();
     setSelectedSpot(spot);
     setShowRoute(true);
+
+    const latDelta = Math.max(0.015, Math.abs(userLocation.latitude - spot.latitude) * 1.6);
+    const lngDelta = Math.max(0.015, Math.abs(userLocation.longitude - spot.longitude) * 1.6);
 
     if (mapRef.current?.animateToRegion) {
       mapRef.current.animateToRegion(
         {
           latitude: (userLocation.latitude + spot.latitude) / 2 - 0.001,
           longitude: (userLocation.longitude + spot.longitude) / 2,
-          latitudeDelta: 0.009,
-          longitudeDelta: 0.009,
+          latitudeDelta: latDelta,
+          longitudeDelta: lngDelta,
         },
         800,
       );
@@ -352,6 +368,8 @@ export default function SearcherScreen() {
   };
 
   const handleChipPress = (chip: string) => {
+    setShowSuggestions(false);
+    Keyboard.dismiss();
     setActiveChip(chip);
     if (chip === 'Nearest') {
       loadSpotsForLocation(userLocation);
@@ -366,37 +384,97 @@ export default function SearcherScreen() {
     }
   };
 
+  const handleSearchTextChange = (text: string) => {
+    setSearchQuery(text);
+
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    if (!text || text.trim().length < 2) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        const results = await apiService.searchDestination(text.trim(), userLocation);
+        setSearchSuggestions(results || []);
+        setShowSuggestions((results || []).length > 0);
+      } catch (err) {
+        console.warn('[SearcherScreen] Autocomplete search error:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+  };
+
+  const handleSelectDestination = async (destination: any) => {
+    Keyboard.dismiss();
+    setSearchQuery(destination.name);
+    setShowSuggestions(false);
+    setSearchSuggestions([]);
+
+    const destCoords = {
+      latitude: Number(destination.latitude),
+      longitude: Number(destination.longitude),
+    };
+
+    setTargetSearchName(destination.name);
+
+    // Populate candidate bays around the selected destination
+    await loadSpotsForLocation(destCoords);
+
+    const destSpot: ParkingSpot = {
+      id: destination.placeId || destination.id || 'selected-destination',
+      name: destination.name,
+      address: destination.address || 'Selected Destination',
+      rating: 4.9,
+      pricePerHour: 3.5,
+      distance: 'Calculating...',
+      eta: 'Calculating...',
+      availableSpots: 8,
+      latitude: destCoords.latitude,
+      longitude: destCoords.longitude,
+    };
+
+    await handleSpotPress(destSpot);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSearchSuggestions([]);
+    setShowSuggestions(false);
+    setIsSearching(false);
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+  };
+
   const handleSearchSubmit = async () => {
+    Keyboard.dismiss();
     if (!searchQuery.trim()) return;
+
+    if (searchSuggestions.length > 0) {
+      handleSelectDestination(searchSuggestions[0]);
+      return;
+    }
+
+    setIsSearching(true);
     try {
-      const results = await apiService.searchDestination(searchQuery, userLocation);
+      const results = await apiService.searchDestination(searchQuery.trim(), userLocation);
       if (results && results.length > 0) {
-        const topResult = results[0];
-        const newSpot: ParkingSpot = {
-          id: topResult.id || 'search-res',
-          name: topResult.name,
-          address: topResult.address || 'Selected Destination',
-          rating: 4.8,
-          pricePerHour: 5,
-          distance: `${((topResult.distanceMeters || 500) / 1000).toFixed(1)} km`,
-          eta: `${Math.round((topResult.distanceMeters || 500) / 100)} mins`,
-          availableSpots: 10,
-          latitude: topResult.latitude,
-          longitude: topResult.longitude,
-        };
-        setSelectedSpot(newSpot);
-        setShowRoute(true);
-        if (mapRef.current?.animateToRegion) {
-          mapRef.current.animateToRegion({
-            latitude: topResult.latitude,
-            longitude: topResult.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }, 800);
-        }
+        handleSelectDestination(results[0]);
+      } else {
+        Alert.alert('No Locations Found', `Could not find "${searchQuery.trim()}". Please try a different location.`);
       }
     } catch (e) {
       console.warn('Destination search:', e);
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -696,27 +774,74 @@ export default function SearcherScreen() {
         >
           <AppHeader style={{ paddingHorizontal: 4, paddingVertical: 4 }} />
 
-          {/* Search Bar */}
-          <View style={styles.searchBar}>
-            <MaterialIcons
-              name="search"
-              size={22}
-              color={Theme.colors.outline}
-              style={styles.searchIcon}
-            />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search parking destinations..."
-              placeholderTextColor={Theme.colors.outlineVariant}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onSubmitEditing={handleSearchSubmit}
-              returnKeyType="search"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
-                <MaterialIcons name="close" size={18} color={Theme.colors.outline} />
-              </TouchableOpacity>
+          {/* Search Bar & Autocomplete Suggestions Dropdown */}
+          <View style={styles.searchSectionContainer}>
+            <View style={styles.searchBar}>
+              <MaterialIcons
+                name="search"
+                size={22}
+                color={Theme.colors.outline}
+                style={styles.searchIcon}
+              />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search parking destinations (e.g. KLCC)..."
+                placeholderTextColor={Theme.colors.outlineVariant}
+                value={searchQuery}
+                onChangeText={handleSearchTextChange}
+                onFocus={() => {
+                  if (searchSuggestions.length > 0) {
+                    setShowSuggestions(true);
+                  }
+                }}
+                onSubmitEditing={handleSearchSubmit}
+                returnKeyType="search"
+                autoCorrect={false}
+              />
+              {isSearching && (
+                <ActivityIndicator
+                  size="small"
+                  color={Theme.colors.stormyTeal}
+                  style={{ marginRight: 6 }}
+                />
+              )}
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={handleClearSearch} style={styles.clearButton}>
+                  <MaterialIcons name="close" size={18} color={Theme.colors.outline} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Suggestions Dropdown List */}
+            {showSuggestions && searchSuggestions.length > 0 && (
+              <View style={styles.suggestionsDropdown}>
+                <FlatList
+                  data={searchSuggestions}
+                  keyExtractor={(item, index) => item.placeId || item.id || `loc-${index}`}
+                  keyboardShouldPersistTaps="handled"
+                  nestedScrollEnabled
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.suggestionItem}
+                      onPress={() => handleSelectDestination(item)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.suggestionIconWrapper}>
+                        <MaterialIcons name="place" size={18} color={Theme.colors.stormyTeal} />
+                      </View>
+                      <View style={styles.suggestionTextWrapper}>
+                        <Text style={styles.suggestionName} numberOfLines={1}>
+                          {item.name}
+                        </Text>
+                        <Text style={styles.suggestionAddress} numberOfLines={1}>
+                          {item.address}
+                        </Text>
+                      </View>
+                      <MaterialIcons name="chevron-right" size={18} color={Theme.colors.outlineVariant} />
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
             )}
           </View>
 
@@ -946,6 +1071,70 @@ const styles = StyleSheet.create({
         boxShadow: '0px 6px 20px rgba(0, 0, 0, 0.1)',
       },
     }),
+  },
+  searchSectionContainer: {
+    zIndex: 100,
+    position: 'relative',
+  },
+  suggestionsDropdown: {
+    position: 'absolute',
+    top: 52,
+    left: 0,
+    right: 0,
+    maxHeight: 230,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    zIndex: 200,
+    borderWidth: 1,
+    borderColor: 'rgba(190, 200, 202, 0.45)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.16,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: '0px 6px 18px rgba(0, 0, 0, 0.15)',
+      },
+    }),
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#edf2f4',
+    backgroundColor: '#ffffff',
+  },
+  suggestionIconWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Theme.colors.surfaceIce,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  suggestionTextWrapper: {
+    flex: 1,
+    paddingRight: 6,
+  },
+  suggestionName: {
+    fontFamily: Theme.typography.fontFamily.semiBold,
+    fontSize: 14,
+    color: Theme.colors.onSurface,
+  },
+  suggestionAddress: {
+    fontFamily: Theme.typography.fontFamily.regular,
+    fontSize: 11,
+    color: Theme.colors.onSurfaceVariant,
+    marginTop: 2,
   },
   searchBar: {
     flexDirection: 'row',
