@@ -1,0 +1,6 @@
+export enum SpotStatus {
+  AVAILABLE = 'AVAILABLE',
+  RESERVED = 'RESERVED',
+  OCCUPIED = 'OCCUPIED',
+  EXPIRED = 'EXPIRED',
+}

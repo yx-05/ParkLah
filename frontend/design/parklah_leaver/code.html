@@ -1,0 +1,292 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>SpotSwap - Leave</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary": "#713d10",
+                "secondary-fixed": "#adedf7",
+                "on-tertiary": "#ffffff",
+                "surface-container-low": "#f1f4f4",
+                "on-error": "#ffffff",
+                "on-tertiary-fixed": "#301400",
+                "on-secondary-container": "#2b6d76",
+                "on-tertiary-fixed-variant": "#6d390c",
+                "primary-fixed": "#9ff0fb",
+                "surface-dim": "#d7dadb",
+                "secondary": "#23676f",
+                "inverse-primary": "#82d3de",
+                "on-secondary-fixed-variant": "#004f56",
+                "on-primary-container": "#9becf7",
+                "primary-fixed-dim": "#82d3de",
+                "on-primary": "#ffffff",
+                "primary": "#00535b",
+                "on-error-container": "#93000a",
+                "on-primary-fixed": "#001f23",
+                "on-surface-variant": "#3e494a",
+                "outline": "#6f797a",
+                "on-secondary-fixed": "#001f23",
+                "surface-bright": "#f7fafa",
+                "surface-variant": "#e0e3e3",
+                "action-blue": "#007bff",
+                "on-secondary": "#ffffff",
+                "tertiary-fixed-dim": "#ffb783",
+                "outline-variant": "#bec8ca",
+                "secondary-container": "#adedf7",
+                "error-container": "#ffdad6",
+                "inverse-surface": "#2d3132",
+                "surface-ice": "#f2fbfe",
+                "surface-tint": "#006972",
+                "surface-container": "#ebeeef",
+                "secondary-fixed-dim": "#91d1da",
+                "on-primary-fixed-variant": "#004f56",
+                "error": "#ba1a1a",
+                "star-gold": "#ffb400",
+                "surface-container-highest": "#e0e3e3",
+                "surface": "#f7fafa",
+                "background": "#f7fafa",
+                "primary-container": "#006d77",
+                "on-surface": "#181c1d",
+                "inverse-on-surface": "#eef1f2",
+                "on-tertiary-container": "#ffd7bd",
+                "surface-container-high": "#e6e9e9",
+                "on-background": "#181c1d",
+                "tertiary-container": "#8e5426",
+                "surface-container-lowest": "#ffffff",
+                "tertiary-fixed": "#ffdcc5"
+        },
+        "borderRadius": {
+                "DEFAULT": "1rem",
+                "lg": "2rem",
+                "xl": "3rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-sm": "8px",
+                "stack-md": "16px",
+                "margin-mobile": "20px",
+                "gutter": "16px",
+                "nav-height": "72px",
+                "stack-lg": "24px"
+        },
+        "fontFamily": {
+                "label-sm": [
+                        "Lexend"
+                ],
+                "label-lg": [
+                        "Lexend"
+                ],
+                "headline-lg": [
+                        "Lexend"
+                ],
+                "headline-md": [
+                        "Lexend"
+                ],
+                "label-md": [
+                        "Lexend"
+                ],
+                "headline-lg-mobile": [
+                        "Lexend"
+                ],
+                "body-lg": [
+                        "Lexend"
+                ],
+                "headline-sm": [
+                        "Lexend"
+                ],
+                "body-md": [
+                        "Lexend"
+                ]
+        },
+        "fontSize": {
+                "label-sm": [
+                        "10px",
+                        {
+                                "lineHeight": "14px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "label-lg": [
+                        "14px",
+                        {
+                                "lineHeight": "18px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-md": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-sm": [
+                        "18px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .soft-shadow {
+            box-shadow: 0px 4px 20px rgba(0, 109, 119, 0.05);
+        }
+        .interactive-shadow {
+            box-shadow: 0px 8px 24px rgba(130, 211, 222, 0.2);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="bg-background dark:bg-on-background docked full-width top-0 bg-background dark:bg-on-background flex justify-between items-center px-margin-mobile py-stack-md w-full sticky z-40 hidden md:flex">
+<div class="flex items-center gap-stack-sm">
+<img class="w-10 h-10 rounded-full object-cover border-2 border-surface-container-highest" data-alt="A small circular avatar showing a professional looking person in a well lit studio setting with a neutral background, exuding trust and reliability in a modern corporate style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALTl7yEWmdtYZq3gF9WmkmtpXpHT8Hqd3WzWCPP0Tj5LiaxmUyVC4822QCE2yG4slRhpphG7tDGtDBjQBr1g2BcuU-Tb0gV3w43j5RNhvcQGN-AB5V_tGW9FN9mcLlmhH5RMc7lb40YCBSywTMpTZLD_M6ZuXoc1q6UJpM4pqWwqvGHYvbdGovkAG6AQmFmag5DI71KFlZX7p7HqUQGROsMxM3GjD3bFge4Df5T2_lQXxSC9FSqhSy">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">ParkLah</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-primary dark:text-primary-fixed hover:opacity-80 transition-opacity active:scale-95 duration-150 transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Mobile Header -->
+<header class="bg-background dark:bg-on-background flex justify-between items-center px-margin-mobile py-stack-md w-full sticky top-0 z-40 md:hidden">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">ParkLah</span>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-primary dark:text-primary-fixed hover:opacity-80 transition-opacity active:scale-95 duration-150 transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile py-stack-lg pb-32">
+<div class="w-full max-w-md flex flex-col items-center text-center gap-stack-lg">
+<!-- Graphic/Icon -->
+<div class="w-24 h-24 rounded-full bg-surface-container flex items-center justify-center mb-stack-sm shadow-[0px_4px_20px_rgba(0,109,119,0.05)]">
+<span class="material-symbols-outlined text-[48px] text-primary" data-icon="exit_to_app">exit_to_app</span>
+</div>
+<div class="flex flex-col gap-stack-sm">
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-[#006d77]">Leaving soon?</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Enter your number plate to release your spot and earn tokens.</p>
+</div>
+<!-- Input Form -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-stack-md soft-shadow flex flex-col gap-stack-md">
+<div class="flex flex-col gap-stack-sm text-left">
+<label class="font-label-md text-label-md text-[#006d77]" for="plate-input">Number Plate</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border border-[#006d77] rounded-lg px-stack-md py-stack-sm font-headline-sm text-headline-sm text-center uppercase tracking-widest focus:ring-2 focus:ring-primary focus:outline-none transition-all placeholder:font-label-md placeholder:text-outline-variant placeholder:normal-case placeholder:tracking-normal" id="plate-input" placeholder="e.g. ABC 123" type="text">
+</div>
+</div>
+<button class="w-full bg-[#83c5be] hover:opacity-90 font-headline-sm text-headline-sm py-stack-sm px-stack-lg rounded-full interactive-shadow transition-all active:scale-[0.98] flex items-center justify-center gap-stack-sm mt-stack-sm text-[#004d54]">I'm Leaving <span class="material-symbols-outlined text-[#004d54]" data-icon="arrow_forward" style="font-variation-settings: &quot;FILL&quot; 0, &quot;wght&quot; 300, &quot;GRAD&quot; 0, &quot;opsz&quot; 24;">arrow_forward</span></button>
+</div>
+<!-- Recent Vehicles -->
+<div class="w-full flex flex-col gap-stack-sm mt-stack-lg text-left">
+<span class="font-label-md text-label-md text-on-surface-variant px-stack-sm">Recent Vehicles</span>
+<div class="flex gap-stack-sm overflow-x-auto pb-stack-sm scrollbar-hide">
+<button class="flex-shrink-0 flex items-center gap-stack-sm bg-surface-container-lowest rounded-lg px-stack-sm py-stack-sm soft-shadow border border-transparent hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-outline text-[20px]" data-icon="directions_car">directions_car</span>
+<span class="font-label-md text-label-md text-on-surface">XYZ 789</span>
+</button>
+<button class="flex-shrink-0 flex items-center gap-stack-sm bg-surface-container-lowest rounded-lg px-stack-sm py-stack-sm soft-shadow border border-transparent hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-outline text-[20px]" data-icon="directions_car">directions_car</span>
+<span class="font-label-md text-label-md text-on-surface">LMN 456</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md flex justify-around items-center px-stack-md py-stack-sm bg-surface-container-lowest shadow-[0px_8px_32px_rgba(0,0,0,0.08)] rounded-full z-50 md:hidden">
+<a class="flex items-center justify-center bg-[#83c5be] rounded-full px-stack-md py-stack-sm hover:opacity-80 transition-opacity active:scale-95 duration-200 transition-all" href="#"><span class="material-symbols-outlined mr-2 text-[20px] text-[#004d54]" data-icon="exit_to_app" style="font-variation-settings: &quot;FILL&quot; 0, &quot;wght&quot; 300, &quot;GRAD&quot; 0, &quot;opsz&quot; 24;">exit_to_app</span><span class="font-label-lg text-label-lg text-[#004d54]">Leave</span></a>
+<a class="flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-200 transition-all rounded-full px-stack-md py-stack-sm" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="search">search</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-200 transition-all rounded-full px-stack-md py-stack-sm" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="bookmark">bookmark</span>
+</a>
+</nav>
+<script>
+        // Simple script to format number plate input
+        const plateInput = document.getElementById('plate-input');
+        if(plateInput) {
+            plateInput.addEventListener('input', function(e) {
+                // Remove non-alphanumeric characters and convert to uppercase
+                let value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                // Add a space after 3 characters if length > 3
+                if (value.length > 3) {
+                    value = value.substring(0, 3) + ' ' + value.substring(3);
+                }
+                e.target.value = value;
+            });
+        }
+    </script>
+
+
+
+
+
+
+</body></html>

@@ -1,0 +1,46 @@
+{
+  "model_version": "lightgbm_v1_synthetic",
+  "exported_at": "2026-09-09T13:59:58Z",
+  "input_feature_count": 26,
+  "feature_columns": [
+    "road_distance_meters",
+    "euclid_distance_meters",
+    "detour_ratio",
+    "spot_to_dest_distance_meters",
+    "road_eta_seconds",
+    "leaver_countdown_seconds",
+    "abs_eta_countdown_diff",
+    "signed_time_slack",
+    "hour_of_day",
+    "day_of_week",
+    "is_rush_hour",
+    "is_weekend",
+    "current_speed_kmh",
+    "heading_bearing_diff_deg",
+    "heading_dest_diff_deg",
+    "gps_accuracy_meters",
+    "ping_staleness_seconds",
+    "driver_reliability_rating",
+    "historical_acceptance_rate",
+    "historical_completion_rate",
+    "historical_cancellation_rate",
+    "lifetime_matches_count",
+    "spot_type_enum",
+    "vehicle_size_compatibility",
+    "has_landmark_note",
+    "landmark_note_length"
+  ],
+  "input_tensor_name": "float_input",
+  "output_tensor_name": "probabilities",
+  "probability_index": 1,
+  "metrics": {
+    "roc_auc": 0.8807,
+    "pr_auc": 0.9123,
+    "brier_score": 0.1306,
+    "ece": 0.0103
+  },
+  "quality_gate": {
+    "passed": false,
+    "min_cutoff_prob": 0.4
+  }
+}

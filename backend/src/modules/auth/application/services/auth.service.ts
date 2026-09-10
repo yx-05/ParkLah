@@ -1,0 +1,401 @@
+import { Injectable, Inject } from '@nestjs/common';
+import * as jwt from 'jsonwebtoken';
+import * as crypto from 'crypto';
+import { IUserRepositoryPort, USER_REPOSITORY_PORT } from '../../domain/ports/user-repository.port';
+import { ISmsGatewayPort, SMS_GATEWAY_PORT } from '../../domain/ports/sms-gateway.port';
+import { IOtpCachePort, OTP_CACHE_PORT } from '../../domain/ports/otp-cache.port';
+import { UserEntity } from '../../domain/entities/user.entity';
+import { RequestOtpDto, VerifyOtpDto, OAuthLoginDto, LoginDto, RegisterDto } from '../dto';
+import { AuthenticationException, RateLimitException, ValidationException } from '../../../../common/exceptions';
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export interface AuthResult {
+  tokens: AuthTokens;
+  user: {
+    id: string;
+    phoneNumber: string | null;
+    email: string | null;
+    fullName: string;
+    authProvider: string;
+    avatarUrl: string | null;
+    reliabilityRating: number;
+  };
+}
+
+@Injectable()
+export class AuthService {
+  private readonly jwtSecret: string;
+  private readonly jwtRefreshSecret: string;
+
+  constructor(
+    @Inject(USER_REPOSITORY_PORT)
+    private readonly userRepository: IUserRepositoryPort,
+    @Inject(SMS_GATEWAY_PORT)
+    private readonly smsGateway: ISmsGatewayPort,
+    @Inject(OTP_CACHE_PORT)
+    private readonly otpCache: IOtpCachePort,
+  ) {
+    this.jwtSecret = process.env.JWT_SECRET || 'parklah-development-secret-jwt-key-2026';
+    this.jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'parklah-refresh-secret-jwt-key-2026';
+  }
+
+  async requestOtp(dto: RequestOtpDto): Promise<{ success: boolean; message: string; ttlSeconds: number }> {
+    const isAllowed = await this.otpCache.checkRateLimit(dto.phoneNumber, 60);
+    if (!isAllowed) {
+      throw new RateLimitException('Rate limit exceeded. Please wait 60 seconds before requesting another OTP.');
+    }
+
+    const otp = this.generate6DigitOtp();
+    const ttlSeconds = 300; // 5 minutes
+
+    await this.otpCache.storeOtp(dto.phoneNumber, otp, ttlSeconds);
+    await this.smsGateway.sendOtp(dto.phoneNumber, otp);
+
+    return {
+      success: true,
+      message: 'OTP sent successfully',
+      ttlSeconds,
+    };
+  }
+
+  async verifyOtp(dto: VerifyOtpDto): Promise<AuthResult> {
+    const storedOtp = await this.otpCache.getOtp(dto.phoneNumber);
+    if (!storedOtp || storedOtp !== dto.otp) {
+      throw new AuthenticationException('Invalid or expired OTP code');
+    }
+
+    // Clear used OTP
+    await this.otpCache.deleteOtp(dto.phoneNumber);
+
+    // Find or create user
+    let user = await this.userRepository.findByPhoneNumber(dto.phoneNumber);
+    if (!user) {
+      user = new UserEntity({
+        phoneNumber: dto.phoneNumber,
+        fullName: 'ParkLah Driver',
+        authProvider: 'PHONE',
+        reliabilityRating: 5.0,
+      });
+      user = await this.userRepository.create(user);
+    }
+
+    const tokens = this.generateTokens(user);
+
+    // Store active session in cache
+    await this.otpCache.storeSession(
+      user.id,
+      {
+        userId: user.id,
+        phoneNumber: user.phoneNumber,
+        issuedAt: Date.now(),
+      },
+      7 * 24 * 3600, // 7 days
+    );
+
+    return {
+      tokens,
+      user: {
+        id: user.id,
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+        fullName: user.fullName,
+        authProvider: user.authProvider,
+        avatarUrl: user.avatarUrl,
+        reliabilityRating: user.reliabilityRating,
+      },
+    };
+  }
+
+  async oauthLogin(dto: OAuthLoginDto): Promise<AuthResult> {
+    // 1. Check if user exists by provider + providerId
+    let user = await this.userRepository.findByProvider(dto.provider, dto.providerId);
+
+    // 2. If not found, check by email if provided
+    if (!user && dto.email) {
+      user = await this.userRepository.findByEmail(dto.email);
+      if (user) {
+        user.authProvider = dto.provider;
+        user.authProviderId = dto.providerId;
+        if (dto.avatarUrl && !user.avatarUrl) user.avatarUrl = dto.avatarUrl;
+        await this.userRepository.update(user);
+      }
+    }
+
+    // 3. Create new user if still not existing
+    if (!user) {
+      user = new UserEntity({
+        email: dto.email || null,
+        fullName: dto.fullName || `${dto.provider} Driver`,
+        authProvider: dto.provider,
+        authProviderId: dto.providerId,
+        avatarUrl: dto.avatarUrl || null,
+        reliabilityRating: 5.0,
+      });
+      user = await this.userRepository.create(user);
+    }
+
+    const tokens = this.generateTokens(user);
+
+    // 4. Store session
+    await this.otpCache.storeSession(
+      user.id,
+      {
+        userId: user.id,
+        email: user.email,
+        authProvider: user.authProvider,
+        issuedAt: Date.now(),
+      },
+      7 * 24 * 3600,
+    );
+
+    return {
+      tokens,
+      user: {
+        id: user.id,
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+        fullName: user.fullName,
+        authProvider: user.authProvider,
+        avatarUrl: user.avatarUrl,
+        reliabilityRating: user.reliabilityRating,
+      },
+    };
+  }
+
+  async bootstrapDevSession(): Promise<AuthResult> {
+    let user = await this.userRepository.findByEmail('yxho15@gmail.com');
+    if (!user) {
+      user = await this.userRepository.findById('08221e6d-e5e4-4482-b084-6edc23db5107');
+    }
+    if (!user) {
+      user = new UserEntity({
+        id: '08221e6d-e5e4-4482-b084-6edc23db5107',
+        email: 'yxho15@gmail.com',
+        fullName: 'Yxho',
+        authProvider: 'GOOGLE',
+        reliabilityRating: 5.0,
+      });
+      try {
+        user = await this.userRepository.create(user);
+      } catch {}
+    }
+
+    const tokens = this.generateTokens(user);
+    await this.otpCache.storeSession(
+      user.id,
+      {
+        userId: user.id,
+        email: user.email,
+        authProvider: user.authProvider,
+        issuedAt: Date.now(),
+      },
+      7 * 24 * 3600,
+    );
+
+    return {
+      tokens,
+      user: {
+        id: user.id,
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+        fullName: user.fullName,
+        authProvider: user.authProvider,
+        avatarUrl: user.avatarUrl,
+        reliabilityRating: user.reliabilityRating,
+      },
+    };
+  }
+
+  async refreshToken(refreshTokenString: string): Promise<AuthTokens> {
+    try {
+      const decoded = jwt.verify(refreshTokenString, this.jwtRefreshSecret) as { userId: string };
+      const user = await this.userRepository.findById(decoded.userId);
+      if (!user || !user.isActive) {
+        throw new AuthenticationException('User account not found or deactivated');
+      }
+
+      const activeSession = await this.otpCache.getSession(user.id);
+      if (!activeSession) {
+        throw new AuthenticationException('Session expired or revoked. Please log in again.');
+      }
+
+      return this.generateTokens(user);
+    } catch (err) {
+      if (err instanceof AuthenticationException) throw err;
+      throw new AuthenticationException('Invalid refresh token signature or token expired');
+    }
+  }
+
+  public generateTokens(user: UserEntity): AuthTokens {
+    const payload = {
+      sub: user.id,
+      userId: user.id,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      authProvider: user.authProvider,
+    };
+
+    const accessToken = jwt.sign(payload, this.jwtSecret, { expiresIn: '1h' });
+    const refreshToken = jwt.sign({ userId: user.id }, this.jwtRefreshSecret, { expiresIn: '7d' });
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn: 3600,
+    };
+  }
+
+  public verifyAccessToken(token: string): { sub: string; userId: string; phoneNumber?: string; email?: string } {
+    try {
+      return jwt.verify(token, this.jwtSecret) as any;
+    } catch (e) {
+      throw new AuthenticationException('Invalid or expired access token');
+    }
+  }
+
+  public hashPassword(password: string): string {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+    return `${salt}:${hash}`;
+  }
+
+  public verifyPassword(password: string, combinedHash: string): boolean {
+    const [salt, hash] = combinedHash.split(':');
+    if (!salt || !hash) return false;
+    const testHash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+    try {
+      return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(testHash, 'hex'));
+    } catch {
+      return false;
+    }
+  }
+
+  private normalizeIdentifier(input: string): { isEmail: boolean; normalized: string } {
+    const trimmed = input.trim();
+    if (trimmed.includes('@')) {
+      return { isEmail: true, normalized: trimmed.toLowerCase() };
+    }
+    let phone = trimmed.replace(/[\s\-]/g, '');
+    if (phone.startsWith('01')) {
+      phone = '+6' + phone;
+    } else if (phone.startsWith('601')) {
+      phone = '+' + phone;
+    }
+    return { isEmail: false, normalized: phone };
+  }
+
+  async login(dto: LoginDto): Promise<AuthResult> {
+    const { isEmail, normalized } = this.normalizeIdentifier(dto.emailOrPhone);
+    let user: UserEntity | null = null;
+
+    if (isEmail) {
+      user = await this.userRepository.findByEmail(normalized);
+    } else {
+      user = await this.userRepository.findByPhoneNumber(normalized);
+    }
+
+    if (!user) {
+      throw new AuthenticationException('Account not found. Please check your credentials or create an account.');
+    }
+
+    if (user.passwordHash) {
+      const isValid = this.verifyPassword(dto.password, user.passwordHash);
+      if (!isValid) {
+        throw new AuthenticationException('Incorrect password. Please check your credentials.');
+      }
+    } else {
+      // User created via OAuth or initial seed without password - set password on first login
+      user.passwordHash = this.hashPassword(dto.password);
+      await this.userRepository.update(user);
+    }
+
+    const tokens = this.generateTokens(user);
+
+    await this.otpCache.storeSession(
+      user.id,
+      {
+        userId: user.id,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        authProvider: user.authProvider,
+        issuedAt: Date.now(),
+      },
+      7 * 24 * 3600,
+    );
+
+    return {
+      tokens,
+      user: {
+        id: user.id,
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+        fullName: user.fullName,
+        authProvider: user.authProvider,
+        avatarUrl: user.avatarUrl,
+        reliabilityRating: user.reliabilityRating,
+      },
+    };
+  }
+
+  async register(dto: RegisterDto): Promise<AuthResult> {
+    const { isEmail, normalized } = this.normalizeIdentifier(dto.emailOrPhone);
+
+    if (isEmail) {
+      const existing = await this.userRepository.findByEmail(normalized);
+      if (existing) {
+        throw new ValidationException('An account with this email already exists. Please log in.');
+      }
+    } else {
+      const existing = await this.userRepository.findByPhoneNumber(normalized);
+      if (existing) {
+        throw new ValidationException('An account with this phone number already exists. Please log in.');
+      }
+    }
+
+    const user = new UserEntity({
+      email: isEmail ? normalized : null,
+      phoneNumber: !isEmail ? normalized : null,
+      fullName: dto.fullName?.trim() || 'ParkLah Driver',
+      authProvider: isEmail ? 'EMAIL' : 'PHONE',
+      passwordHash: this.hashPassword(dto.password),
+      reliabilityRating: 5.0,
+    });
+
+    const created = await this.userRepository.create(user);
+    const tokens = this.generateTokens(created);
+
+    await this.otpCache.storeSession(
+      created.id,
+      {
+        userId: created.id,
+        email: created.email,
+        phoneNumber: created.phoneNumber,
+        authProvider: created.authProvider,
+        issuedAt: Date.now(),
+      },
+      7 * 24 * 3600,
+    );
+
+    return {
+      tokens,
+      user: {
+        id: created.id,
+        phoneNumber: created.phoneNumber,
+        email: created.email,
+        fullName: created.fullName,
+        authProvider: created.authProvider,
+        avatarUrl: created.avatarUrl,
+        reliabilityRating: created.reliabilityRating,
+      },
+    };
+  }
+
+  private generate6DigitOtp(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+}

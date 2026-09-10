@@ -1,0 +1,330 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>SpotSwap - Find Parking</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary": "#713d10",
+                "secondary-fixed": "#adedf7",
+                "on-tertiary": "#ffffff",
+                "surface-container-low": "#f1f4f4",
+                "on-error": "#ffffff",
+                "on-tertiary-fixed": "#301400",
+                "on-secondary-container": "#2b6d76",
+                "on-tertiary-fixed-variant": "#6d390c",
+                "primary-fixed": "#9ff0fb",
+                "surface-dim": "#d7dadb",
+                "secondary": "#23676f",
+                "inverse-primary": "#82d3de",
+                "on-secondary-fixed-variant": "#004f56",
+                "on-primary-container": "#9becf7",
+                "primary-fixed-dim": "#82d3de",
+                "on-primary": "#ffffff",
+                "primary": "#00535b",
+                "on-error-container": "#93000a",
+                "on-primary-fixed": "#001f23",
+                "on-surface-variant": "#3e494a",
+                "outline": "#6f797a",
+                "on-secondary-fixed": "#001f23",
+                "surface-bright": "#f7fafa",
+                "surface-variant": "#e0e3e3",
+                "action-blue": "#007bff",
+                "on-secondary": "#ffffff",
+                "tertiary-fixed-dim": "#ffb783",
+                "outline-variant": "#bec8ca",
+                "secondary-container": "#adedf7",
+                "error-container": "#ffdad6",
+                "inverse-surface": "#2d3132",
+                "surface-ice": "#f2fbfe",
+                "surface-tint": "#006972",
+                "surface-container": "#ebeeef",
+                "secondary-fixed-dim": "#91d1da",
+                "on-primary-fixed-variant": "#004f56",
+                "error": "#ba1a1a",
+                "star-gold": "#ffb400",
+                "surface-container-highest": "#e0e3e3",
+                "surface": "#f7fafa",
+                "background": "#f7fafa",
+                "primary-container": "#006d77",
+                "on-surface": "#181c1d",
+                "inverse-on-surface": "#eef1f2",
+                "on-tertiary-container": "#ffd7bd",
+                "surface-container-high": "#e6e9e9",
+                "on-background": "#181c1d",
+                "tertiary-container": "#8e5426",
+                "surface-container-lowest": "#ffffff",
+                "tertiary-fixed": "#ffdcc5"
+        },
+        "borderRadius": {
+                "DEFAULT": "1rem",
+                "lg": "2rem",
+                "xl": "3rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-sm": "8px",
+                "stack-md": "16px",
+                "margin-mobile": "20px",
+                "gutter": "16px",
+                "nav-height": "72px",
+                "stack-lg": "24px"
+        },
+        "fontFamily": {
+                "label-sm": [
+                        "Lexend"
+                ],
+                "label-lg": [
+                        "Lexend"
+                ],
+                "headline-lg": [
+                        "Lexend"
+                ],
+                "headline-md": [
+                        "Lexend"
+                ],
+                "label-md": [
+                        "Lexend"
+                ],
+                "headline-lg-mobile": [
+                        "Lexend"
+                ],
+                "body-lg": [
+                        "Lexend"
+                ],
+                "headline-sm": [
+                        "Lexend"
+                ],
+                "body-md": [
+                        "Lexend"
+                ]
+        },
+        "fontSize": {
+                "label-sm": [
+                        "10px",
+                        {
+                                "lineHeight": "14px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "label-lg": [
+                        "14px",
+                        {
+                                "lineHeight": "18px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-md": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-sm": [
+                        "18px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body { background-color: #f7fafa; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col pb-[100px] md:pb-0">
+<!-- Top App Bar -->
+<header class="bg-background dark:bg-on-background docked full-width top-0 z-40 sticky">
+<div class="flex justify-between items-center px-margin-mobile py-stack-md w-full">
+<!-- Leading Avatar -->
+
+<!-- Headline -->
+<h1 class="font-headline-md text-headline-md font-bold text-primary-container dark:text-primary-fixed">ParkLah</h1>
+<!-- Trailing Icon -->
+<button class="text-on-background dark:text-primary-fixed hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 0;">notifications</span>
+</button>
+</div>
+</header>
+<main class="flex-grow px-margin-mobile py-stack-md space-y-stack-lg max-w-3xl mx-auto w-full">
+<!-- Search & Matchmaking Section -->
+<section class="space-y-stack-md">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-stack-md top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-lowest border-0 focus:border-action-blue focus:ring-1 focus:ring-action-blue rounded-full py-stack-sm pl-[48px] pr-stack-md font-body-md text-on-surface placeholder:text-outline-variant shadow-sm transition-all" placeholder="Search" type="text">
+</div>
+<!-- Chips -->
+<div class="flex space-x-stack-sm overflow-x-auto pb-stack-sm scrollbar-hide snap-x">
+<button class="snap-start flex-shrink-0 bg-action-blue text-white font-label-lg px-stack-lg py-[10px] rounded-full shadow-md font-medium" style="background-color: rgb(131, 197, 190); color: rgb(0, 77, 84);">
+                    Nearest
+                </button>
+<button class="snap-start flex-shrink-0 bg-surface-container-lowest text-on-surface-variant font-label-lg px-stack-lg py-[10px] rounded-full shadow-sm hover:bg-surface-container-high transition-colors border border-transparent">
+                    Most Popular
+                </button>
+<button class="snap-start flex-shrink-0 bg-surface-container-lowest text-on-surface-variant font-label-lg px-stack-lg py-[10px] rounded-full shadow-sm hover:bg-surface-container-high transition-colors border border-transparent">
+                    Most Wanted
+                </button>
+</div>
+<button class="w-full bg-action-blue text-white font-headline-sm py-stack-md rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center space-x-stack-sm mt-stack-md font-medium" style="background-color: rgb(131, 197, 190); color: rgb(0, 77, 84);">
+
+<span class="">Start Matchmaking</span>
+</button>
+</section>
+<!-- Results Grid -->
+<section class="space-y-stack-md">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+<!-- Card 1 -->
+<article class="bg-surface-container-lowest rounded-DEFAULT p-stack-sm flex space-x-stack-md shadow-[0px_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0px_8px_30px_rgba(0,0,0,0.1)] transition-shadow cursor-pointer">
+<div class="w-24 h-24 flex-shrink-0 rounded-DEFAULT overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="A clean, well-lit modern indoor parking garage in Melbourne. Bright fluorescent lighting reflecting off polished concrete floors. Empty parking space clearly marked with white lines. Stormy Teal and Alice Blue tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyc6XvTO9YaDEpckTE9hxU3NpOU4eYkAy0gT5IwBWu3n4chcxmTMAKn0c-vhd_2r609juL3ZBogG2lVgESaDArSUPSMQQoTe6Tb-USKDNejr2yz05M-dsMXJR2mvsI-7uQ-OP_tnJHKs9k-mSuhDmrdvYM4_9RuQ4Agf8HY8QBASDmS_7EJ0Zc-u1w7Z8v0qD2VJT01V2srRhNcF-WPWup7mSxv_JN2ALliOEa7onJRb0oqQutxMW8">
+</div>
+<div class="flex-grow flex flex-col justify-between py-[2px]">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-sm text-on-background line-clamp-1">Melbourne</h3>
+<p class="font-label-md text-on-surface-variant text-sm line-clamp-1">VIC 3000, Australia</p>
+</div>
+<div class="flex items-center space-x-[2px]">
+<span class="material-symbols-outlined text-[16px] text-star-gold" style="font-variation-settings: &quot;FILL&quot; 1;">star</span>
+<span class="font-label-lg text-on-surface">4.0</span>
+</div>
+</div>
+<div class="flex justify-between items-center mt-stack-sm">
+<span class="bg-action-blue text-white font-label-md px-stack-md py-[6px] rounded-full font-medium" style="background-color: rgb(131, 197, 190); color: rgb(0, 77, 84);">$5 Per hour</span>
+<div class="flex items-center text-on-surface-variant space-x-[4px]">
+<span class="material-symbols-outlined text-[16px]">near_me</span>
+<span class="font-label-lg">4.5Km</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="bg-surface-container-lowest rounded-DEFAULT p-stack-sm flex space-x-stack-md shadow-[0px_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0px_8px_30px_rgba(0,0,0,0.1)] transition-shadow cursor-pointer">
+<div class="w-24 h-24 flex-shrink-0 rounded-DEFAULT overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="An outdoor parking lot near a modern office building on George Street, Sydney. Sunny daytime lighting, crisp shadows. Clean asphalt. Corporate Modern aesthetic with deep teal accents in the environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMuTBUN4ne2M4gBU9QmVFCn6-xyC3AeJYcAkGDOhj3Katg2CgOyy73o3l4LpNjUzqc854eeIBJmWjsrp1gSRY-QsL5YmV5ly6WCDkfeAxMgVwfJUJMetw5erJJ5cDBzAwCkUuZ6Y5txIWax12aP7EgLeZXBO8WWhDuZ6u0QBuxNqv0-GcJ5kVlc5cKy8OiVVWvVAiWdeP5StlHtm1V9sndCmiRizQpGNcuc_al6dAPcuZvlLJye_Ft">
+</div>
+<div class="flex-grow flex flex-col justify-between py-[2px]">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-sm text-on-background line-clamp-1">George Street</h3>
+<p class="font-label-md text-on-surface-variant text-sm line-clamp-1">NSW 2000, Australia</p>
+</div>
+<div class="flex items-center space-x-[2px]">
+<span class="material-symbols-outlined text-[16px] text-star-gold" style="font-variation-settings: &quot;FILL&quot; 1;">star</span>
+<span class="font-label-lg text-on-surface">5.0</span>
+</div>
+</div>
+<div class="flex justify-between items-center mt-stack-sm">
+<span class="bg-action-blue text-white font-label-md px-stack-md py-[6px] rounded-full font-medium" style="background-color: rgb(131, 197, 190); color: rgb(0, 77, 84);">$6 Per hour</span>
+<div class="flex items-center text-on-surface-variant space-x-[4px]">
+<span class="material-symbols-outlined text-[16px]">near_me</span>
+<span class="font-label-lg">1.0Km</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="bg-surface-container-lowest rounded-DEFAULT p-stack-sm flex space-x-stack-md shadow-[0px_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0px_8px_30px_rgba(0,0,0,0.1)] transition-shadow cursor-pointer">
+<div class="w-24 h-24 flex-shrink-0 rounded-DEFAULT overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="A spacious underground parking facility in Brisbane. Wide driving lanes, clear directional signage. Subtle teal painted pillars. Bright, safe, and modern atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdfik_JyOm1NOYcwJqfwhHUV0QBX_WQDe-s9uEmsP2BwQUQQGNOp8BZbndd_eSkeSu5msn4vGyrTL8CT3HQGI7Wh0P9R46LD5Ppz-YGbyuFF-i67ZN_r24UASe3HQHjKLmu9JY3ppTCrGdfg3z4UXmqGFXz7elJqevdmT_utgeoQQwYZsc3heOQbKPf-itjSqQz_yGcbO7V1GfkyNxPSfEn0hjfUzege5Ur9PocoPsr7fG4--Avm7z">
+</div>
+<div class="flex-grow flex flex-col justify-between py-[2px]">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-sm text-on-background line-clamp-1">Brisbane</h3>
+<p class="font-label-md text-on-surface-variant text-sm line-clamp-1">QLD 4000, Australia</p>
+</div>
+<div class="flex items-center space-x-[2px]">
+<span class="material-symbols-outlined text-[16px] text-star-gold" style="font-variation-settings: &quot;FILL&quot; 1;">star</span>
+<span class="font-label-lg text-on-surface">5.0</span>
+</div>
+</div>
+<div class="flex justify-between items-center mt-stack-sm">
+<span class="bg-action-blue text-white font-label-md px-stack-md py-[6px] rounded-full font-medium" style="background-color: rgb(131, 197, 190); color: rgb(0, 77, 84);">$8 Per hour</span>
+<div class="flex items-center text-on-surface-variant space-x-[4px]">
+<span class="material-symbols-outlined text-[16px]">near_me</span>
+<span class="font-label-lg">3.5Km</span>
+</div>
+</div>
+</div>
+</article>
+</div>
+</section>
+</main>
+<!-- Bottom Nav Bar (Mobile Only) -->
+<nav class="md:hidden shadow-[0px_8px_30px_rgba(0,0,0,0.12)] bg-surface-container-lowest dark:bg-inverse-surface fixed bottom-stack-lg left-1/2 -translate-x-1/2 w-[calc(100%-2*20px)] max-w-sm z-50 rounded-full flex justify-between items-center px-stack-lg py-[12px]">
+<!-- Tab 1: Leave (Inactive) -->
+<button class="flex items-center justify-center text-on-surface-variant hover:text-action-blue transition-colors w-12 h-12 rounded-full">
+<span class="material-symbols-outlined text-[24px]">home</span>
+</button>
+<!-- Tab 2: Find (Active) -->
+<button class="flex items-center justify-center bg-action-blue text-white rounded-full w-12 h-12 shadow-md hover:shadow-lg transition-all active:scale-95" style="background-color: rgb(131, 197, 190); color: rgb(0, 77, 84);">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: &quot;FILL&quot; 1, &quot;wght&quot; 300;">bookmark</span>
+</button>
+<!-- Tab 3: Tokens (Inactive) -->
+<button class="flex items-center justify-center text-on-surface-variant hover:text-action-blue transition-colors w-12 h-12 rounded-full">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+</button>
+</nav>
+
+
+
+
+
+
+
+
+</body></html>

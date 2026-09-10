@@ -1,0 +1,225 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ParkLah - Landing</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed": "#301400",
+                      "error-container": "#ffdad6",
+                      "surface-tint": "#006972",
+                      "tertiary": "#713d10",
+                      "on-tertiary-fixed-variant": "#6d390c",
+                      "secondary-fixed": "#adedf7",
+                      "on-secondary-container": "#2b6d76",
+                      "surface-container": "#ebeeef",
+                      "primary-fixed-dim": "#82d3de",
+                      "primary": "#00535b",
+                      "inverse-surface": "#2d3132",
+                      "on-primary-fixed": "#001f23",
+                      "surface": "#f7fafa",
+                      "on-secondary": "#ffffff",
+                      "on-surface-variant": "#3e494a",
+                      "surface-variant": "#e0e3e3",
+                      "outline-variant": "#bec8ca",
+                      "secondary-container": "#adedf7",
+                      "on-background": "#181c1d",
+                      "outline": "#6f797a",
+                      "tertiary-container": "#8e5426",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-container": "#ffd7bd",
+                      "surface-container-low": "#f1f4f4",
+                      "on-error-container": "#93000a",
+                      "surface-ice": "#f2fbfe",
+                      "surface-container-high": "#e6e9e9",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "on-primary-container": "#9becf7",
+                      "on-error": "#ffffff",
+                      "background": "#f7fafa",
+                      "inverse-on-surface": "#eef1f2",
+                      "error": "#ba1a1a",
+                      "star-gold": "#ffb400",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary": "#23676f",
+                      "on-primary-fixed-variant": "#004f56",
+                      "secondary-fixed-dim": "#91d1da",
+                      "on-secondary-fixed": "#001f23",
+                      "surface-dim": "#d7dadb",
+                      "on-surface": "#181c1d",
+                      "on-primary": "#ffffff",
+                      "primary-fixed": "#9ff0fb",
+                      "primary-container": "#006d77",
+                      "surface-bright": "#f7fafa",
+                      "tertiary-fixed": "#ffdcc5",
+                      "action-blue": "#007bff",
+                      "surface-container-highest": "#e0e3e3",
+                      "on-secondary-fixed-variant": "#004f56",
+                      "inverse-primary": "#82d3de"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "nav-height": "72px",
+                      "gutter": "16px",
+                      "stack-sm": "8px",
+                      "stack-lg": "24px",
+                      "stack-md": "16px",
+                      "margin-mobile": "20px",
+                      "md": "24px",
+                      "xs": "8px",
+                      "base": "16px",
+                      "container-margin": "20px"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Lexend"
+                      ],
+                      "headline-sm": [
+                              "Lexend"
+                      ],
+                      "label-lg": [
+                              "Lexend"
+                      ],
+                      "label-md": [
+                              "Lexend"
+                      ],
+                      "label-sm": [
+                              "Lexend"
+                      ],
+                      "body-md": [
+                              "Lexend"
+                      ],
+                      "headline-lg-mobile": [
+                              "Lexend"
+                      ],
+                      "body-lg": [
+                              "Lexend"
+                      ],
+                      "headline-md": [
+                              "Lexend"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-sm": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-lg": [
+                              "14px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-sm": [
+                              "10px",
+                              {
+                                      "lineHeight": "14px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "22px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body { font-family: 'Lexend', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface-ice min-h-screen text-on-surface pb-[100px] flex flex-col items-center">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 bg-background dark:bg-on-background flat no shadows flex justify-between items-center px-container-margin py-md w-full sticky z-40 max-w-lg">
+<div class="flex items-center gap-stack-sm hover:opacity-80 transition-opacity cursor-pointer">
+
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">ParkLah</h1>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-primary dark:text-primary-fixed hover:opacity-80 transition-opacity active:scale-95 duration-150 transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-lg px-margin-mobile flex flex-col justify-center items-center gap-stack-lg py-12">
+<div class="text-center mb-4">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-stack-sm">Ready to Park?</h2>
+<p class="font-body-lg text-body-lg text-outline">Choose an action below to get started.</p>
+</div>
+<!-- Action Buttons -->
+<div class="w-full flex flex-col gap-stack-md">
+<!-- I'm Leaving Button -->
+<button class="w-[65%] bg-[#83c5be] text-[#006d77] rounded-xl px-6 flex flex-col items-center justify-center gap-3 shadow-[0_8px_30px_rgba(0,109,119,0.12)] hover:opacity-90 active:scale-[0.98] transition-all duration-200 py-4 mx-auto" style="color: rgb(0, 77, 84);"><span class="material-symbols-outlined text-4xl" data-icon="exit_to_app" style="font-variation-settings: &quot;FILL&quot; 0, &quot;wght&quot; 400;">exit_to_app</span><span class="font-headline-sm text-headline-sm tracking-widest uppercase">I'm Leaving</span><span class="font-label-md text-label-md text-primary opacity-80 mt-1">Release your spot and earn tokens</span></button>
+<!-- I'm Searching Button -->
+<button class="w-[65%] bg-[#83c5be] text-[#006d77] rounded-xl px-6 flex flex-col items-center justify-center gap-3 shadow-[0_8px_30px_rgba(0,109,119,0.12)] hover:opacity-90 active:scale-[0.98] transition-all duration-200 py-4 mx-auto" style="color: rgb(0, 77, 84);"><span class="material-symbols-outlined text-4xl" data-icon="search_check" style="font-variation-settings: &quot;FILL&quot; 0, &quot;wght&quot; 400;">search_check</span><span class="font-headline-sm text-headline-sm tracking-widest uppercase">I'm Searching</span><span class="font-label-md text-label-md text-primary opacity-80 mt-1">Find an available parking spot near you</span></button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md flex justify-around items-center px-stack-md py-stack-sm bg-surface-container-lowest shadow-[0px_8px_32px_rgba(0,0,0,0.08)] rounded-full z-50 md:hidden"><a class="flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-200 transition-all rounded-full px-stack-md py-stack-sm" href="#"><span class="material-symbols-outlined text-[24px]" data-icon="exit_to_app">exit_to_app</span></a><a class="flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-200 transition-all rounded-full px-stack-md py-stack-sm" href="#"><span class="material-symbols-outlined text-[24px]" data-icon="search">search</span></a><a class="flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-200 transition-all rounded-full px-stack-md py-stack-sm" href="#"><span class="material-symbols-outlined text-[24px]" data-icon="account_balance_wallet">account_balance_wallet</span></a></nav>
+
+
+
+
+
+
+
+
+
+
+</body></html>
