@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,6 +22,9 @@ interface InAppNavigationHUDProps {
   onExitNavigation: () => void;
   onConfirmArrival: () => void;
   onOpenExternalMaps?: () => void;
+  isScanning?: boolean;
+  hasConfirmedMatch?: boolean;
+  isGatekeeperUnlocked?: boolean;
 }
 
 export const InAppNavigationHUD: React.FC<InAppNavigationHUDProps> = ({
@@ -33,6 +37,9 @@ export const InAppNavigationHUD: React.FC<InAppNavigationHUDProps> = ({
   onExitNavigation,
   onConfirmArrival,
   onOpenExternalMaps,
+  isScanning = false,
+  hasConfirmedMatch = false,
+  isGatekeeperUnlocked = false,
 }) => {
   const insets = useSafeAreaInsets();
 
@@ -113,6 +120,40 @@ export const InAppNavigationHUD: React.FC<InAppNavigationHUDProps> = ({
               </TouchableOpacity>
             )}
           </View>
+
+          {/* Radar / Gatekeeper Status Pill for Direct Navigation */}
+          {!hasConfirmedMatch && (
+            <View
+              style={[
+                styles.gatekeeperStatusPill,
+                isScanning && styles.gatekeeperStatusPillActive,
+                !isScanning && isGatekeeperUnlocked && styles.gatekeeperStatusPillUnlocked,
+              ]}
+            >
+              {isScanning ? (
+                <>
+                  <ActivityIndicator size="small" color="#006d77" style={{ marginRight: 6 }} />
+                  <Text style={styles.gatekeeperStatusTextActive}>
+                    Radar Active • Auto-matching nearby leavers...
+                  </Text>
+                </>
+              ) : isGatekeeperUnlocked ? (
+                <>
+                  <MaterialIcons name="radar" size={15} color="#00535b" style={{ marginRight: 5 }} />
+                  <Text style={styles.gatekeeperStatusTextUnlocked}>
+                    Within 3.0 km zone • Auto-matchmaker ready
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <MaterialIcons name="lock-outline" size={15} color="#6f797a" style={{ marginRight: 5 }} />
+                  <Text style={styles.gatekeeperStatusTextLocked}>
+                    Auto-matchmaker engages at 3.0 km / 10 min
+                  </Text>
+                </>
+              )}
+            </View>
+          )}
 
           {/* Action Buttons Row */}
           <View style={styles.actionButtonsRow}>
@@ -309,5 +350,37 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 15,
     fontWeight: '700',
+  },
+  gatekeeperStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f4f4',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 12,
+    marginBottom: 14,
+  },
+  gatekeeperStatusPillActive: {
+    backgroundColor: '#d7f0ee',
+    borderWidth: 1,
+    borderColor: '#006d77',
+  },
+  gatekeeperStatusPillUnlocked: {
+    backgroundColor: '#e6f7f6',
+  },
+  gatekeeperStatusTextLocked: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6f797a',
+  },
+  gatekeeperStatusTextUnlocked: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#00535b',
+  },
+  gatekeeperStatusTextActive: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#00535b',
   },
 });

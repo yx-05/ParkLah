@@ -37,6 +37,89 @@ const DEFAULT_COORDS = {
   longitude: 101.6778,
 };
 
+export interface DemandForecastData {
+  hubName: string;
+  occupancyRate: number;
+  demandLevel: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
+  turnoverMinutes: number;
+  isPeakHour: boolean;
+  recommendedMode: 'CRUISING_PERMITTED' | 'P2P_HANDOFF';
+  estimatedCruisingMinutesSaved: number;
+  peakWindowLabel?: string;
+}
+
+const computeLocalDemandForecast = (
+  destinationName?: string,
+  coords?: { latitude: number; longitude: number },
+): DemandForecastData => {
+  const now = new Date();
+  const utcHours = now.getUTCHours();
+  const klHour = (utcHours + 8) % 24;
+
+  let timeFactor = 0.5;
+  if (klHour >= 0 && klHour < 7) {
+    timeFactor = 0.15 + 0.02 * klHour;
+  } else if (klHour >= 7 && klHour < 11) {
+    timeFactor = 0.42 + 0.08 * (klHour - 7);
+  } else if (klHour >= 11 && klHour < 15) {
+    timeFactor = 0.82 + 0.12 * Math.sin(((klHour - 11) / 4.0) * Math.PI);
+  } else if (klHour >= 15 && klHour < 17) {
+    timeFactor = 0.68 + 0.05 * (klHour - 15);
+  } else if (klHour >= 17 && klHour < 22) {
+    timeFactor = 0.86 + 0.12 * Math.sin(((klHour - 17) / 5.0) * Math.PI);
+  } else {
+    timeFactor = 0.52 - 0.18 * (klHour - 22);
+  }
+
+  const baseOcc = 0.65;
+  const occ = Math.min(0.98, Math.max(0.15, Number((baseOcc * 0.35 + timeFactor * 0.58).toFixed(2))));
+
+  let demandLevel: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL' = 'HIGH';
+  let turnoverMinutes = 4.2;
+  let cruisingSaved = 18;
+  let recommendedMode: 'CRUISING_PERMITTED' | 'P2P_HANDOFF' = 'P2P_HANDOFF';
+
+  if (occ < 0.45) {
+    demandLevel = 'LOW';
+    turnoverMinutes = 14.5;
+    cruisingSaved = 4;
+    recommendedMode = 'CRUISING_PERMITTED';
+  } else if (occ < 0.70) {
+    demandLevel = 'MODERATE';
+    turnoverMinutes = 8.5;
+    cruisingSaved = 10;
+    recommendedMode = 'P2P_HANDOFF';
+  } else if (occ < 0.88) {
+    demandLevel = 'HIGH';
+    turnoverMinutes = 4.5;
+    cruisingSaved = 18;
+    recommendedMode = 'P2P_HANDOFF';
+  } else {
+    demandLevel = 'CRITICAL';
+    turnoverMinutes = 2.8;
+    cruisingSaved = 24;
+    recommendedMode = 'P2P_HANDOFF';
+  }
+
+  let peakLabel = 'Peak Turnover Zone (12:00 PM – 2:30 PM)';
+  if (klHour >= 17 && klHour <= 21) {
+    peakLabel = 'Evening Peak Zone (6:00 PM – 9:30 PM)';
+  } else if (klHour >= 7 && klHour <= 10) {
+    peakLabel = 'Morning Commute Zone (7:30 AM – 9:30 AM)';
+  }
+
+  return {
+    hubName: destinationName || 'Mid Valley Megamall',
+    occupancyRate: occ,
+    demandLevel,
+    turnoverMinutes,
+    isPeakHour: (klHour >= 11 && klHour <= 14) || (klHour >= 17 && klHour <= 21),
+    recommendedMode,
+    estimatedCruisingMinutesSaved: cruisingSaved,
+    peakWindowLabel: peakLabel,
+  };
+};
+
 const createCandidateSpots = (coords: { latitude: number; longitude: number }): ParkingSpot[] => [
   {
     id: 'spot-1',
@@ -157,10 +240,44 @@ export default function SearcherScreen() {
   const [remainingDurationFormatted, setRemainingDurationFormatted] = useState('');
   const [etaClockFormatted, setEtaClockFormatted] = useState('');
 
+  // Distance Gatekeeper & Auto-Matchmaking State
+  const [isGatekeeperUnlocked, setIsGatekeeperUnlocked] = useState(false);
+  const autoMatchTriggeredRef = useRef(false);
+  const manualCancelledRadarRef = useRef(false);
+  const lastLocationPingRef = useRef(0);
+
+  // AI Demand Forecasting State
+  const [demandForecast, setDemandForecast] = useState<DemandForecastData>(() =>
+    computeLocalDemandForecast('Mid Valley Megamall', DEFAULT_COORDS),
+  );
+
+  const fetchDemandForecast = async (
+    name?: string,
+    coords?: { latitude: number; longitude: number },
+  ) => {
+    try {
+      const forecast = await apiService.getDemandForecast({
+        destinationName: name,
+        latitude: coords?.latitude,
+        longitude: coords?.longitude,
+      });
+      if (forecast && forecast.hubName) {
+        setDemandForecast(forecast);
+        return;
+      }
+    } catch (err) {
+      console.warn('[Searcher] Dynamic demand forecast API fallback to local:', err);
+    }
+    setDemandForecast(computeLocalDemandForecast(name, coords));
+  };
+
   // 1. Initialize GPS Tracking & Real-Time WebSockets
   useEffect(() => {
     // Ensure authenticated session and WebSocket connection are active
     apiService.bootstrapSession().catch(console.error);
+
+    // Initial AI demand forecast for default location
+    fetchDemandForecast('Mid Valley Megamall', DEFAULT_COORDS);
 
     const locService = LocationService.getInstance();
 
@@ -307,6 +424,9 @@ export default function SearcherScreen() {
       );
     }
 
+    // Fetch AI dynamic demand forecast for the selected spot/destination
+    fetchDemandForecast(spot.name, { latitude: spot.latitude, longitude: spot.longitude });
+
     // Immediately fetch live OpenStreetMap (OSRM) road route & true driving ETA
     try {
       const routingService = NavigationRoutingService.getInstance();
@@ -333,9 +453,18 @@ export default function SearcherScreen() {
   };
 
   // 2. Start Live Matchmaking with Backend Gatekeeper
-  const handleStartMatchmaking = async () => {
-    const target = selectedSpot || spots[0] || { latitude: userLocation.latitude, longitude: userLocation.longitude };
-    const spotName = target.name || 'Target Parking Bay';
+  const handleStartMatchmaking = async (
+    explicitTarget?: { latitude: number; longitude: number; name?: string },
+    isAutoTriggered: boolean = false,
+  ) => {
+    const navDest = navRoute?.polyline[navRoute.polyline.length - 1];
+    const target =
+      explicitTarget ||
+      selectedSpot ||
+      (navDest ? { latitude: navDest.latitude, longitude: navDest.longitude, name: targetSearchName || 'Target Parking Spot' } : null) ||
+      spots[0] ||
+      { latitude: userLocation.latitude, longitude: userLocation.longitude };
+    const spotName = target.name || targetSearchName || 'Target Parking Bay';
     setTargetSearchName(spotName);
 
     // Keep navigation route line and ending destination flag active on the map
@@ -356,11 +485,22 @@ export default function SearcherScreen() {
         name: spotName,
       });
     } catch (e: any) {
-      console.warn('[SearcherScreen] Backend startSearch warning:', e?.message || e);
+      setMatchmaking(false);
+      reset();
+      console.warn('[SearcherScreen] Backend startSearch error:', e?.message || e);
+      if (!isAutoTriggered) {
+        Alert.alert(
+          'Matchmaking Boundary Locked',
+          (e?.message || 'Cannot start matchmaking: Searcher is outside the 3.0km / 10-minute boundary.') +
+            '\n\nTip: Navigate towards your destination and ParkLah will automatically start matchmaking once within 3.0 km!',
+          [{ text: 'OK' }],
+        );
+      }
     }
   };
 
   const handleCancelMatchmaking = async () => {
+    manualCancelledRadarRef.current = true;
     setMatchmaking(false);
     setTargetSearchName(null);
     reset();
@@ -479,6 +619,9 @@ export default function SearcherScreen() {
   };
 
   const startInAppNavigation = async (spotCoords: { latitude: number; longitude: number }) => {
+    autoMatchTriggeredRef.current = false;
+    manualCancelledRadarRef.current = false;
+    setIsGatekeeperUnlocked(false);
     setIsNavigating(true);
     setShowRoute(true);
     setNavigatingToSpot(confirmedMatchId || 'direct-nav', spotCoords);
@@ -509,6 +652,9 @@ export default function SearcherScreen() {
   };
 
   const handleExitNavigation = () => {
+    autoMatchTriggeredRef.current = false;
+    manualCancelledRadarRef.current = false;
+    setIsGatekeeperUnlocked(false);
     setIsNavigating(false);
     setNavRoute(null);
     setShowRoute(false);
@@ -577,7 +723,7 @@ export default function SearcherScreen() {
     setRemainingDurationFormatted(routingService.formatDuration(remainingSeconds));
     setEtaClockFormatted(routingService.formatEta(remainingSeconds));
 
-    // Automatically trigger arrival modal when within 25 meters of parking space
+    // Evaluate Distance Gatekeeper boundary (<= 3.0km & <= 10min) & Auto-Matchmaking
     const destination = navRoute.polyline[navRoute.polyline.length - 1];
     if (destination) {
       const distToDest = routingService.calculateDistance(
@@ -586,8 +732,43 @@ export default function SearcherScreen() {
         destination.latitude,
         destination.longitude,
       );
+
+      const withinBoundary = distToDest <= 3000 && remainingSeconds <= 600;
+      setIsGatekeeperUnlocked(withinBoundary);
+
+      // Auto-matchmaking trigger when entering Gatekeeper boundary during direct navigation
+      const isDirectNav = !confirmedMatchId || confirmedMatchId === 'direct-nav';
+      if (
+        isDirectNav &&
+        withinBoundary &&
+        !isScanning &&
+        !autoMatchTriggeredRef.current &&
+        !manualCancelledRadarRef.current
+      ) {
+        autoMatchTriggeredRef.current = true;
+        console.log('[SearcherScreen] Auto-triggering matchmaking inside 3.0km boundary...');
+        handleStartMatchmaking(
+          {
+            latitude: destination.latitude,
+            longitude: destination.longitude,
+            name: targetSearchName || selectedSpot?.name || 'Target Parking Area',
+          },
+          true,
+        );
+      }
+
+      // Automatically trigger arrival modal when within 25 meters of parking space
       if (distToDest <= 25) {
         setShowArrivalModal(true);
+      }
+    }
+
+    // Keep active searcher location fresh in Redis while radar is scanning
+    if (isScanning) {
+      const now = Date.now();
+      if (now - lastLocationPingRef.current > 7000) {
+        lastLocationPingRef.current = now;
+        apiService.updateSearcherLocation(userLocation);
       }
     }
 
@@ -763,6 +944,9 @@ export default function SearcherScreen() {
           onExitNavigation={handleExitNavigation}
           onConfirmArrival={() => setShowArrivalModal(true)}
           onOpenExternalMaps={handleOpenExternalMaps}
+          isScanning={isScanning}
+          hasConfirmedMatch={Boolean(confirmedMatchId && confirmedMatchId !== 'direct-nav')}
+          isGatekeeperUnlocked={isGatekeeperUnlocked}
         />
       )}
 
@@ -817,7 +1001,7 @@ export default function SearcherScreen() {
               <View style={styles.suggestionsDropdown}>
                 <FlatList
                   data={searchSuggestions}
-                  keyExtractor={(item, index) => item.placeId || item.id || `loc-${index}`}
+                  keyExtractor={(item, index) => `${item.placeId || item.id || 'loc'}-${index}`}
                   keyboardShouldPersistTaps="handled"
                   nestedScrollEnabled
                   renderItem={({ item }) => (
@@ -868,11 +1052,44 @@ export default function SearcherScreen() {
             })}
           </ScrollView>
 
+          {/* AI Demand Forecast Banner (Browsing Destinations) */}
+          {!selectedSpot && demandForecast && (
+            <View style={styles.aiDemandBanner}>
+              <View style={styles.aiDemandHeaderRow}>
+                <View
+                  style={[
+                    styles.aiDemandChip,
+                    demandForecast.demandLevel === 'CRITICAL'
+                      ? styles.aiDemandChipCritical
+                      : demandForecast.demandLevel === 'HIGH'
+                      ? styles.aiDemandChipHigh
+                      : styles.aiDemandChipModerate,
+                  ]}
+                >
+                  <Text style={styles.aiDemandChipText}>
+                    🤖 AI DEMAND FORECAST: {demandForecast.demandLevel} ({Math.round(demandForecast.occupancyRate * 100)}% Occupancy)
+                  </Text>
+                </View>
+                <View style={styles.aiPillRecommended}>
+                  <MaterialIcons name="auto-awesome" size={12} color={Theme.colors.primary} />
+                  <Text style={styles.aiPillRecommendedText}>
+                    {demandForecast.recommendedMode === 'P2P_HANDOFF'
+                      ? 'P2P Handoff Highly Recommended'
+                      : 'Cruising Permitted'}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.aiDemandSubtitle}>
+                ⚡ {demandForecast.peakWindowLabel || 'Peak Turnover Zone (12:00 PM – 2:30 PM)'} • Save ~{demandForecast.estimatedCruisingMinutesSaved} min cruising
+              </Text>
+            </View>
+          )}
+
           {/* Matchmaking Action Button */}
           {!selectedSpot && (
             <TouchableOpacity
               style={[styles.matchButton, isScanning && styles.matchButtonActive]}
-              onPress={isScanning ? handleCancelMatchmaking : handleStartMatchmaking}
+              onPress={isScanning ? handleCancelMatchmaking : () => handleStartMatchmaking()}
               activeOpacity={0.88}
             >
               {isScanning ? (
@@ -929,6 +1146,39 @@ export default function SearcherScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* AI Demand Forecast Card */}
+            {demandForecast && (
+              <View style={styles.aiDemandCard}>
+                <View style={styles.aiDemandHeaderRow}>
+                  <View
+                    style={[
+                      styles.aiDemandChip,
+                      demandForecast.demandLevel === 'CRITICAL'
+                        ? styles.aiDemandChipCritical
+                        : demandForecast.demandLevel === 'HIGH'
+                        ? styles.aiDemandChipHigh
+                        : styles.aiDemandChipModerate,
+                    ]}
+                  >
+                    <Text style={styles.aiDemandChipText}>
+                      🤖 AI DEMAND FORECAST: {demandForecast.demandLevel} ({Math.round(demandForecast.occupancyRate * 100)}% Occupancy)
+                    </Text>
+                  </View>
+                  <View style={styles.aiPillRecommended}>
+                    <MaterialIcons name="auto-awesome" size={12} color={Theme.colors.primary} />
+                    <Text style={styles.aiPillRecommendedText}>
+                      {demandForecast.recommendedMode === 'P2P_HANDOFF'
+                        ? 'P2P Handoff Highly Recommended'
+                        : 'Cruising Permitted'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.aiDemandSubtitle}>
+                  ⚡ {demandForecast.peakWindowLabel || 'Peak Turnover Zone (12:00 PM – 2:30 PM)'} • Save ~{demandForecast.estimatedCruisingMinutesSaved} min cruising
+                </Text>
+              </View>
+            )}
+
             {/* Badges Row */}
             <View style={styles.badgesRow}>
               <View style={styles.badgePill}>
@@ -965,7 +1215,7 @@ export default function SearcherScreen() {
                   { flex: 1.2 },
                   isScanning && { backgroundColor: Theme.colors.surfaceContainerHighest, borderWidth: 1, borderColor: Theme.colors.stormyTeal },
                 ]}
-                onPress={isScanning ? handleCancelMatchmaking : handleStartMatchmaking}
+                onPress={isScanning ? handleCancelMatchmaking : () => handleStartMatchmaking()}
                 activeOpacity={0.88}
               >
                 {isScanning ? (
@@ -1457,5 +1707,73 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: Theme.typography.fontFamily.medium,
     color: Theme.colors.error,
+  },
+  aiDemandCard: {
+    backgroundColor: '#F0F9FA',
+    borderRadius: 12,
+    padding: 10,
+    marginTop: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 109, 119, 0.2)',
+  },
+  aiDemandBanner: {
+    backgroundColor: '#F0F9FA',
+    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 109, 119, 0.25)',
+  },
+  aiDemandHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 4,
+  },
+  aiDemandChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: Theme.colors.primaryContainer,
+  },
+  aiDemandChipHigh: {
+    backgroundColor: '#ffdad6',
+  },
+  aiDemandChipCritical: {
+    backgroundColor: '#ffb4ab',
+  },
+  aiDemandChipModerate: {
+    backgroundColor: '#d1e7dd',
+  },
+  aiDemandChipText: {
+    fontSize: 11,
+    fontFamily: Theme.typography.fontFamily.bold,
+    color: Theme.colors.onSurface,
+  },
+  aiPillRecommended: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    backgroundColor: Theme.colors.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: Theme.colors.stormyTeal,
+  },
+  aiPillRecommendedText: {
+    fontSize: 10,
+    fontFamily: Theme.typography.fontFamily.semiBold,
+    color: Theme.colors.stormyTeal,
+  },
+  aiDemandSubtitle: {
+    fontSize: 11,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.onSurfaceVariant,
+    marginTop: 2,
   },
 });

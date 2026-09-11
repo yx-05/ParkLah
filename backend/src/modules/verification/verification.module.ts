@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { VerificationService } from './application/services/verification.service';
 import { GeofenceEngine } from './domain/services/geofence.engine';
+import { TelemetryIntegrityService } from './domain/services/telemetry-integrity.service';
 import { VerificationController } from './infrastructure/controllers/verification.controller';
 import { DISPUTE_REPOSITORY_PORT } from './domain/ports/dispute-repository.port';
 import { PostgresDisputeRepository } from './infrastructure/adapters/postgres-dispute.repository';
@@ -23,6 +24,7 @@ import { AuthModule } from '../auth/auth.module';
   providers: [
     VerificationService,
     GeofenceEngine,
+    TelemetryIntegrityService,
     {
       provide: DISPUTE_REPOSITORY_PORT,
       useFactory: () => {
@@ -35,6 +37,7 @@ import { AuthModule } from '../auth/auth.module';
   exports: [
     VerificationService,
     GeofenceEngine,
+    TelemetryIntegrityService,
     DISPUTE_REPOSITORY_PORT,
   ],
 })

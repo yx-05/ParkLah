@@ -98,7 +98,7 @@ export const DestinationSearchBar: React.FC<DestinationSearchBarProps> = ({
         <View style={styles.dropdown}>
           <FlatList
             data={suggestions}
-            keyExtractor={(item) => item.name}
+            keyExtractor={(item, index) => `${item.name}-${index}`}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.suggestionItem}

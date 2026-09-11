@@ -1,0 +1,4538 @@
+{
+  "model_name": "ParkLah Urban Commercial Hub Demand & Turnover Forecaster (Zoning-Aware)",
+  "model_version": "lgbm_zoning_demand_forecaster_v2",
+  "exported_at": "2026-09-11T15:43:05Z",
+  "total_training_samples": 25000,
+  "feature_columns": [
+    "hub_index",
+    "hub_archetype",
+    "hour_of_day",
+    "day_of_week",
+    "is_rush_hour",
+    "is_weekend",
+    "rain_intensity"
+  ],
+  "metrics": {
+    "r2_score": 0.9956,
+    "mae": 0.0099,
+    "rmse": 0.0128,
+    "train_duration_sec": 1.503,
+    "feature_importances": {
+      "hub_index": 0.1615,
+      "hub_archetype": 0.171,
+      "hour_of_day": 0.3975,
+      "day_of_week": 0.1681,
+      "is_rush_hour": 0.0047,
+      "is_weekend": 0.0,
+      "rain_intensity": 0.0972
+    }
+  },
+  "quality_gate": {
+    "passed": true,
+    "target_r2": ">= 0.88",
+    "target_mae": "<= 0.05",
+    "evaluated_r2": 0.9956,
+    "evaluated_mae": 0.0099
+  },
+  "zoning_archetypes": {
+    "RETAIL_MALL": {
+      "index": 0,
+      "description": "Large-scale shopping and lifestyle malls with high daytime turnover and post-closing wind-down.",
+      "mall_closing_hour": 22.0,
+      "post_closing_occupancy_range": [
+        0.25,
+        0.35
+      ]
+    },
+    "NIGHTLIFE_ENTERTAINMENT": {
+      "index": 1,
+      "description": "High-density dining, bistros, and entertainment hubs with intense Friday/Saturday late-night surges.",
+      "late_night_window": "21:00 - 02:30",
+      "late_night_occupancy_range": [
+        0.82,
+        0.92
+      ]
+    },
+    "CAMPUS_COMMUTER": {
+      "index": 2,
+      "description": "University campus and dense transit commercial districts with heavy weekday daytime parking demand.",
+      "peak_window": "08:00 - 18:00",
+      "peak_occupancy_range": [
+        0.78,
+        0.88
+      ]
+    },
+    "RESIDENTIAL_LOCAL": {
+      "index": 3,
+      "description": "Low-density residential neighborhoods with minimal late-night commercial parking demand.",
+      "late_night_occupancy_range": [
+        0.15,
+        0.22
+      ]
+    }
+  },
+  "hubs": [
+    {
+      "hub_index": 0,
+      "name": "Mid Valley Megamall",
+      "archetype": "RETAIL_MALL",
+      "archetype_index": 0,
+      "latitude": 3.1176,
+      "longitude": 101.6778,
+      "capacity": 4500,
+      "base_occupancy": 0.65,
+      "traffic_multiplier": 1.35
+    },
+    {
+      "hub_index": 1,
+      "name": "Bangsar Telawi",
+      "archetype": "NIGHTLIFE_ENTERTAINMENT",
+      "archetype_index": 1,
+      "latitude": 3.1303,
+      "longitude": 101.671,
+      "capacity": 1200,
+      "base_occupancy": 0.55,
+      "traffic_multiplier": 1.4
+    },
+    {
+      "hub_index": 2,
+      "name": "SS15 Subang Jaya",
+      "archetype": "CAMPUS_COMMUTER",
+      "archetype_index": 2,
+      "latitude": 3.0765,
+      "longitude": 101.59,
+      "capacity": 1800,
+      "base_occupancy": 0.58,
+      "traffic_multiplier": 1.42
+    },
+    {
+      "hub_index": 3,
+      "name": "Bukit Bintang",
+      "archetype": "NIGHTLIFE_ENTERTAINMENT",
+      "archetype_index": 1,
+      "latitude": 3.1466,
+      "longitude": 101.7112,
+      "capacity": 3500,
+      "base_occupancy": 0.68,
+      "traffic_multiplier": 1.38
+    },
+    {
+      "hub_index": 4,
+      "name": "Damansara Uptown",
+      "archetype": "RETAIL_MALL",
+      "archetype_index": 0,
+      "latitude": 3.135,
+      "longitude": 101.621,
+      "capacity": 2200,
+      "base_occupancy": 0.6,
+      "traffic_multiplier": 1.36
+    },
+    {
+      "hub_index": 5,
+      "name": "Residential Local Area",
+      "archetype": "RESIDENTIAL_LOCAL",
+      "archetype_index": 3,
+      "latitude": 3.12,
+      "longitude": 101.63,
+      "capacity": 500,
+      "base_occupancy": 0.2,
+      "traffic_multiplier": 1.0
+    }
+  ],
+  "peak_windows": {
+    "lunch_peak": {
+      "start_hour": 12.0,
+      "end_hour": 14.5,
+      "display_window": "12:00 PM \u2013 2:30 PM",
+      "label": "Lunch Dining Peak"
+    },
+    "evening_shopping": {
+      "start_hour": 18.0,
+      "end_hour": 21.5,
+      "display_window": "6:00 PM \u2013 9:30 PM",
+      "label": "Evening Shopping & Dining Peak"
+    },
+    "weekend_nightlife": {
+      "start_hour": 21.0,
+      "end_hour": 2.5,
+      "display_window": "9:00 PM \u2013 2:00 AM",
+      "label": "Weekend Nightlife & Dining Peak"
+    },
+    "morning_commute": {
+      "start_hour": 7.5,
+      "end_hour": 9.5,
+      "display_window": "7:30 AM \u2013 9:30 AM",
+      "label": "Morning Work Commute"
+    }
+  },
+  "hourly_profiles": {
+    "Mid Valley Megamall": {
+      "weekday": {
+        "0": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.37,
+          "occupancy_pct": 37,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.38,
+          "occupancy_pct": 38,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "3": {
+          "occupancy_rate": 0.4,
+          "occupancy_pct": 40,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "4": {
+          "occupancy_rate": 0.41,
+          "occupancy_pct": 41,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "5": {
+          "occupancy_rate": 0.43,
+          "occupancy_pct": 43,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "6": {
+          "occupancy_rate": 0.37,
+          "occupancy_pct": 37,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.46,
+          "occupancy_pct": 46,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.52,
+          "occupancy_pct": 52,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.57,
+          "occupancy_pct": 57,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.79,
+          "occupancy_pct": 79,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.68,
+          "occupancy_pct": 68,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "16": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "17": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "18": {
+          "occupancy_rate": 0.76,
+          "occupancy_pct": 76,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.79,
+          "occupancy_pct": 79,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.79,
+          "occupancy_pct": 79,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "22": {
+          "occupancy_rate": 0.42,
+          "occupancy_pct": 42,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "23": {
+          "occupancy_rate": 0.42,
+          "occupancy_pct": 42,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        }
+      },
+      "friday_eve": {
+        "0": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.37,
+          "occupancy_pct": 37,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.38,
+          "occupancy_pct": 38,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "3": {
+          "occupancy_rate": 0.4,
+          "occupancy_pct": 40,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "4": {
+          "occupancy_rate": 0.41,
+          "occupancy_pct": 41,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "5": {
+          "occupancy_rate": 0.43,
+          "occupancy_pct": 43,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "6": {
+          "occupancy_rate": 0.37,
+          "occupancy_pct": 37,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.46,
+          "occupancy_pct": 46,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.52,
+          "occupancy_pct": 52,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.57,
+          "occupancy_pct": 57,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.79,
+          "occupancy_pct": 79,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.68,
+          "occupancy_pct": 68,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "16": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "17": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "18": {
+          "occupancy_rate": 0.76,
+          "occupancy_pct": 76,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.79,
+          "occupancy_pct": 79,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.79,
+          "occupancy_pct": 79,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "22": {
+          "occupancy_rate": 0.43,
+          "occupancy_pct": 43,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "23": {
+          "occupancy_rate": 0.43,
+          "occupancy_pct": 43,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        }
+      },
+      "weekend": {
+        "0": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.38,
+          "occupancy_pct": 38,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.38,
+          "occupancy_pct": 38,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "3": {
+          "occupancy_rate": 0.4,
+          "occupancy_pct": 40,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "4": {
+          "occupancy_rate": 0.4,
+          "occupancy_pct": 40,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "5": {
+          "occupancy_rate": 0.42,
+          "occupancy_pct": 42,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "6": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.46,
+          "occupancy_pct": 46,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.52,
+          "occupancy_pct": 52,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.57,
+          "occupancy_pct": 57,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.79,
+          "occupancy_pct": 79,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.68,
+          "occupancy_pct": 68,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "16": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "17": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "18": {
+          "occupancy_rate": 0.76,
+          "occupancy_pct": 76,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.79,
+          "occupancy_pct": 79,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.79,
+          "occupancy_pct": 79,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "22": {
+          "occupancy_rate": 0.43,
+          "occupancy_pct": 43,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "23": {
+          "occupancy_rate": 0.43,
+          "occupancy_pct": 43,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        }
+      }
+    },
+    "Bangsar Telawi": {
+      "weekday": {
+        "0": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.31,
+          "occupancy_pct": 31,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.32,
+          "occupancy_pct": 32,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "3": {
+          "occupancy_rate": 0.33,
+          "occupancy_pct": 33,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "4": {
+          "occupancy_rate": 0.34,
+          "occupancy_pct": 34,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "5": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "6": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.41,
+          "occupancy_pct": 41,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.44,
+          "occupancy_pct": 44,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.49,
+          "occupancy_pct": 49,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.54,
+          "occupancy_pct": 54,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.67,
+          "occupancy_pct": 67,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.72,
+          "occupancy_pct": 72,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.55,
+          "occupancy_pct": 55,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "16": {
+          "occupancy_rate": 0.59,
+          "occupancy_pct": 59,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "17": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "18": {
+          "occupancy_rate": 0.69,
+          "occupancy_pct": 69,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.72,
+          "occupancy_pct": 72,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.6,
+          "occupancy_pct": 60,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "22": {
+          "occupancy_rate": 0.5,
+          "occupancy_pct": 50,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "23": {
+          "occupancy_rate": 0.46,
+          "occupancy_pct": 46,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        }
+      },
+      "friday_eve": {
+        "0": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "1": {
+          "occupancy_rate": 0.31,
+          "occupancy_pct": 31,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "2": {
+          "occupancy_rate": 0.32,
+          "occupancy_pct": 32,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "3": {
+          "occupancy_rate": 0.33,
+          "occupancy_pct": 33,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "4": {
+          "occupancy_rate": 0.34,
+          "occupancy_pct": 34,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "5": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "6": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.41,
+          "occupancy_pct": 41,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.44,
+          "occupancy_pct": 44,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.49,
+          "occupancy_pct": 49,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.54,
+          "occupancy_pct": 54,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.67,
+          "occupancy_pct": 67,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.72,
+          "occupancy_pct": 72,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.55,
+          "occupancy_pct": 55,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "16": {
+          "occupancy_rate": 0.59,
+          "occupancy_pct": 59,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "17": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "18": {
+          "occupancy_rate": 0.7,
+          "occupancy_pct": 70,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "22": {
+          "occupancy_rate": 0.74,
+          "occupancy_pct": 74,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "23": {
+          "occupancy_rate": 0.72,
+          "occupancy_pct": 72,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        }
+      },
+      "weekend": {
+        "0": {
+          "occupancy_rate": 0.74,
+          "occupancy_pct": 74,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "1": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "2": {
+          "occupancy_rate": 0.76,
+          "occupancy_pct": 76,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "3": {
+          "occupancy_rate": 0.34,
+          "occupancy_pct": 34,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "4": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "5": {
+          "occupancy_rate": 0.37,
+          "occupancy_pct": 37,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "6": {
+          "occupancy_rate": 0.39,
+          "occupancy_pct": 39,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "7": {
+          "occupancy_rate": 0.4,
+          "occupancy_pct": 40,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.44,
+          "occupancy_pct": 44,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.49,
+          "occupancy_pct": 49,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.53,
+          "occupancy_pct": 53,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.67,
+          "occupancy_pct": 67,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.7,
+          "occupancy_pct": 70,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.72,
+          "occupancy_pct": 72,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.7,
+          "occupancy_pct": 70,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.55,
+          "occupancy_pct": 55,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "16": {
+          "occupancy_rate": 0.59,
+          "occupancy_pct": 59,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "17": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "18": {
+          "occupancy_rate": 0.69,
+          "occupancy_pct": 69,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.74,
+          "occupancy_pct": 74,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "22": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "23": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        }
+      }
+    },
+    "SS15 Subang Jaya": {
+      "weekday": {
+        "0": {
+          "occupancy_rate": 0.28,
+          "occupancy_pct": 28,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.31,
+          "occupancy_pct": 31,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "3": {
+          "occupancy_rate": 0.33,
+          "occupancy_pct": 33,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "4": {
+          "occupancy_rate": 0.34,
+          "occupancy_pct": 34,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "5": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "6": {
+          "occupancy_rate": 0.37,
+          "occupancy_pct": 37,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.72,
+          "occupancy_pct": 72,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "8": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "9": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "10": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "11": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "16": {
+          "occupancy_rate": 0.7,
+          "occupancy_pct": 70,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "17": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "18": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "19": {
+          "occupancy_rate": 0.63,
+          "occupancy_pct": 63,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "20": {
+          "occupancy_rate": 0.64,
+          "occupancy_pct": 64,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "21": {
+          "occupancy_rate": 0.61,
+          "occupancy_pct": 61,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "22": {
+          "occupancy_rate": 0.37,
+          "occupancy_pct": 37,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "23": {
+          "occupancy_rate": 0.34,
+          "occupancy_pct": 34,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        }
+      },
+      "friday_eve": {
+        "0": {
+          "occupancy_rate": 0.28,
+          "occupancy_pct": 28,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.31,
+          "occupancy_pct": 31,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "3": {
+          "occupancy_rate": 0.33,
+          "occupancy_pct": 33,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "4": {
+          "occupancy_rate": 0.34,
+          "occupancy_pct": 34,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "5": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "6": {
+          "occupancy_rate": 0.37,
+          "occupancy_pct": 37,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.72,
+          "occupancy_pct": 72,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "8": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "9": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "10": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "11": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.72,
+          "occupancy_pct": 72,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "16": {
+          "occupancy_rate": 0.69,
+          "occupancy_pct": 69,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "17": {
+          "occupancy_rate": 0.7,
+          "occupancy_pct": 70,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "18": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "19": {
+          "occupancy_rate": 0.63,
+          "occupancy_pct": 63,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "20": {
+          "occupancy_rate": 0.63,
+          "occupancy_pct": 63,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "21": {
+          "occupancy_rate": 0.64,
+          "occupancy_pct": 64,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "22": {
+          "occupancy_rate": 0.39,
+          "occupancy_pct": 39,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "23": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        }
+      },
+      "weekend": {
+        "0": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.31,
+          "occupancy_pct": 31,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.32,
+          "occupancy_pct": 32,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "3": {
+          "occupancy_rate": 0.32,
+          "occupancy_pct": 32,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "4": {
+          "occupancy_rate": 0.33,
+          "occupancy_pct": 33,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "5": {
+          "occupancy_rate": 0.35,
+          "occupancy_pct": 35,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "6": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.54,
+          "occupancy_pct": 54,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.55,
+          "occupancy_pct": 55,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.56,
+          "occupancy_pct": 56,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.56,
+          "occupancy_pct": 56,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.61,
+          "occupancy_pct": 61,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "12": {
+          "occupancy_rate": 0.6,
+          "occupancy_pct": 60,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "13": {
+          "occupancy_rate": 0.59,
+          "occupancy_pct": 59,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "14": {
+          "occupancy_rate": 0.61,
+          "occupancy_pct": 61,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "15": {
+          "occupancy_rate": 0.58,
+          "occupancy_pct": 58,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "16": {
+          "occupancy_rate": 0.61,
+          "occupancy_pct": 61,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "17": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "18": {
+          "occupancy_rate": 0.6,
+          "occupancy_pct": 60,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "19": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "20": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "21": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "22": {
+          "occupancy_rate": 0.38,
+          "occupancy_pct": 38,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "23": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        }
+      }
+    },
+    "Bukit Bintang": {
+      "weekday": {
+        "0": {
+          "occupancy_rate": 0.32,
+          "occupancy_pct": 32,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.34,
+          "occupancy_pct": 34,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.35,
+          "occupancy_pct": 35,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "3": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "4": {
+          "occupancy_rate": 0.38,
+          "occupancy_pct": 38,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "5": {
+          "occupancy_rate": 0.39,
+          "occupancy_pct": 39,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "6": {
+          "occupancy_rate": 0.39,
+          "occupancy_pct": 39,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "7": {
+          "occupancy_rate": 0.44,
+          "occupancy_pct": 44,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.47,
+          "occupancy_pct": 47,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.52,
+          "occupancy_pct": 52,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.57,
+          "occupancy_pct": 57,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.7,
+          "occupancy_pct": 70,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.74,
+          "occupancy_pct": 74,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.74,
+          "occupancy_pct": 74,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.58,
+          "occupancy_pct": 58,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "16": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "17": {
+          "occupancy_rate": 0.65,
+          "occupancy_pct": 65,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "18": {
+          "occupancy_rate": 0.72,
+          "occupancy_pct": 72,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.76,
+          "occupancy_pct": 76,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "22": {
+          "occupancy_rate": 0.52,
+          "occupancy_pct": 52,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "23": {
+          "occupancy_rate": 0.49,
+          "occupancy_pct": 49,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        }
+      },
+      "friday_eve": {
+        "0": {
+          "occupancy_rate": 0.33,
+          "occupancy_pct": 33,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "1": {
+          "occupancy_rate": 0.34,
+          "occupancy_pct": 34,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "2": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "3": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "4": {
+          "occupancy_rate": 0.38,
+          "occupancy_pct": 38,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "5": {
+          "occupancy_rate": 0.39,
+          "occupancy_pct": 39,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "6": {
+          "occupancy_rate": 0.39,
+          "occupancy_pct": 39,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "7": {
+          "occupancy_rate": 0.44,
+          "occupancy_pct": 44,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.47,
+          "occupancy_pct": 47,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.52,
+          "occupancy_pct": 52,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.57,
+          "occupancy_pct": 57,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.74,
+          "occupancy_pct": 74,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.76,
+          "occupancy_pct": 76,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.74,
+          "occupancy_pct": 74,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.59,
+          "occupancy_pct": 59,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "16": {
+          "occupancy_rate": 0.63,
+          "occupancy_pct": 63,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "17": {
+          "occupancy_rate": 0.66,
+          "occupancy_pct": 66,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "18": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "22": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "23": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        }
+      },
+      "weekend": {
+        "0": {
+          "occupancy_rate": 0.79,
+          "occupancy_pct": 79,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "1": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "2": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "3": {
+          "occupancy_rate": 0.38,
+          "occupancy_pct": 38,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "4": {
+          "occupancy_rate": 0.4,
+          "occupancy_pct": 40,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "5": {
+          "occupancy_rate": 0.41,
+          "occupancy_pct": 41,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "6": {
+          "occupancy_rate": 0.42,
+          "occupancy_pct": 42,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "7": {
+          "occupancy_rate": 0.43,
+          "occupancy_pct": 43,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.47,
+          "occupancy_pct": 47,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.52,
+          "occupancy_pct": 52,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.57,
+          "occupancy_pct": 57,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.7,
+          "occupancy_pct": 70,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.74,
+          "occupancy_pct": 74,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.58,
+          "occupancy_pct": 58,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "16": {
+          "occupancy_rate": 0.62,
+          "occupancy_pct": 62,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "17": {
+          "occupancy_rate": 0.65,
+          "occupancy_pct": 65,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "18": {
+          "occupancy_rate": 0.73,
+          "occupancy_pct": 73,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "22": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        },
+        "23": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "CRITICAL",
+          "turnover_minutes": 2.5,
+          "estimated_cruising_saved_mins": 22,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Weekend Nightlife & Dining Peak (9:00 PM \u2013 2:00 AM)"
+        }
+      }
+    },
+    "Damansara Uptown": {
+      "weekday": {
+        "0": {
+          "occupancy_rate": 0.35,
+          "occupancy_pct": 35,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.37,
+          "occupancy_pct": 37,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "3": {
+          "occupancy_rate": 0.39,
+          "occupancy_pct": 39,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "4": {
+          "occupancy_rate": 0.4,
+          "occupancy_pct": 40,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "5": {
+          "occupancy_rate": 0.41,
+          "occupancy_pct": 41,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "6": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.44,
+          "occupancy_pct": 44,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.5,
+          "occupancy_pct": 50,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.55,
+          "occupancy_pct": 55,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.61,
+          "occupancy_pct": 61,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.74,
+          "occupancy_pct": 74,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.67,
+          "occupancy_pct": 67,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "16": {
+          "occupancy_rate": 0.69,
+          "occupancy_pct": 69,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "17": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "18": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.76,
+          "occupancy_pct": 76,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "22": {
+          "occupancy_rate": 0.41,
+          "occupancy_pct": 41,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "23": {
+          "occupancy_rate": 0.41,
+          "occupancy_pct": 41,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        }
+      },
+      "friday_eve": {
+        "0": {
+          "occupancy_rate": 0.35,
+          "occupancy_pct": 35,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.37,
+          "occupancy_pct": 37,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "3": {
+          "occupancy_rate": 0.39,
+          "occupancy_pct": 39,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "4": {
+          "occupancy_rate": 0.4,
+          "occupancy_pct": 40,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "5": {
+          "occupancy_rate": 0.41,
+          "occupancy_pct": 41,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "6": {
+          "occupancy_rate": 0.36,
+          "occupancy_pct": 36,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.44,
+          "occupancy_pct": 44,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.5,
+          "occupancy_pct": 50,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.55,
+          "occupancy_pct": 55,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.61,
+          "occupancy_pct": 61,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.74,
+          "occupancy_pct": 74,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.67,
+          "occupancy_pct": 67,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "16": {
+          "occupancy_rate": 0.69,
+          "occupancy_pct": 69,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "17": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "18": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "22": {
+          "occupancy_rate": 0.42,
+          "occupancy_pct": 42,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "23": {
+          "occupancy_rate": 0.43,
+          "occupancy_pct": 43,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        }
+      },
+      "weekend": {
+        "0": {
+          "occupancy_rate": 0.35,
+          "occupancy_pct": 35,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.37,
+          "occupancy_pct": 37,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.38,
+          "occupancy_pct": 38,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "3": {
+          "occupancy_rate": 0.38,
+          "occupancy_pct": 38,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "4": {
+          "occupancy_rate": 0.39,
+          "occupancy_pct": 39,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "5": {
+          "occupancy_rate": 0.4,
+          "occupancy_pct": 40,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "6": {
+          "occupancy_rate": 0.35,
+          "occupancy_pct": 35,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.45,
+          "occupancy_pct": 45,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "8": {
+          "occupancy_rate": 0.5,
+          "occupancy_pct": 50,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "9": {
+          "occupancy_rate": 0.55,
+          "occupancy_pct": 55,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "10": {
+          "occupancy_rate": 0.61,
+          "occupancy_pct": 61,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "11": {
+          "occupancy_rate": 0.74,
+          "occupancy_pct": 74,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "12": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "13": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "14": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Peak Turnover Zone (12:00 PM \u2013 2:30 PM)"
+        },
+        "15": {
+          "occupancy_rate": 0.67,
+          "occupancy_pct": 67,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "16": {
+          "occupancy_rate": 0.69,
+          "occupancy_pct": 69,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "17": {
+          "occupancy_rate": 0.71,
+          "occupancy_pct": 71,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Commercial Peak Period"
+        },
+        "18": {
+          "occupancy_rate": 0.75,
+          "occupancy_pct": 75,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "19": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "20": {
+          "occupancy_rate": 0.78,
+          "occupancy_pct": 78,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "21": {
+          "occupancy_rate": 0.77,
+          "occupancy_pct": 77,
+          "demand_level": "HIGH",
+          "turnover_minutes": 4.5,
+          "estimated_cruising_saved_mins": 18,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": true,
+          "peak_window_label": "Evening Peak Zone (6:00 PM \u2013 9:30 PM)"
+        },
+        "22": {
+          "occupancy_rate": 0.42,
+          "occupancy_pct": 42,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        },
+        "23": {
+          "occupancy_rate": 0.43,
+          "occupancy_pct": 43,
+          "demand_level": "MODERATE",
+          "turnover_minutes": 8.5,
+          "estimated_cruising_saved_mins": 10,
+          "recommended_mode": "P2P_HANDOFF",
+          "is_peak_hour": false,
+          "peak_window_label": "Moderate Activity"
+        }
+      }
+    },
+    "Residential Local Area": {
+      "weekday": {
+        "0": {
+          "occupancy_rate": 0.17,
+          "occupancy_pct": 17,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.18,
+          "occupancy_pct": 18,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.19,
+          "occupancy_pct": 19,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "3": {
+          "occupancy_rate": 0.21,
+          "occupancy_pct": 21,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "4": {
+          "occupancy_rate": 0.22,
+          "occupancy_pct": 22,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "5": {
+          "occupancy_rate": 0.17,
+          "occupancy_pct": 17,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "6": {
+          "occupancy_rate": 0.18,
+          "occupancy_pct": 18,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.27,
+          "occupancy_pct": 27,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "8": {
+          "occupancy_rate": 0.28,
+          "occupancy_pct": 28,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "9": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "10": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "11": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "12": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "13": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "14": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "15": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "16": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "17": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "18": {
+          "occupancy_rate": 0.28,
+          "occupancy_pct": 28,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "19": {
+          "occupancy_rate": 0.22,
+          "occupancy_pct": 22,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "20": {
+          "occupancy_rate": 0.2,
+          "occupancy_pct": 20,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "21": {
+          "occupancy_rate": 0.19,
+          "occupancy_pct": 19,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "22": {
+          "occupancy_rate": 0.2,
+          "occupancy_pct": 20,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "23": {
+          "occupancy_rate": 0.21,
+          "occupancy_pct": 21,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        }
+      },
+      "friday_eve": {
+        "0": {
+          "occupancy_rate": 0.17,
+          "occupancy_pct": 17,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.18,
+          "occupancy_pct": 18,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.19,
+          "occupancy_pct": 19,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "3": {
+          "occupancy_rate": 0.21,
+          "occupancy_pct": 21,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "4": {
+          "occupancy_rate": 0.22,
+          "occupancy_pct": 22,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "5": {
+          "occupancy_rate": 0.17,
+          "occupancy_pct": 17,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "6": {
+          "occupancy_rate": 0.18,
+          "occupancy_pct": 18,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.27,
+          "occupancy_pct": 27,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "8": {
+          "occupancy_rate": 0.28,
+          "occupancy_pct": 28,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "9": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "10": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "11": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "12": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "13": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "14": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "15": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "16": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "17": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "18": {
+          "occupancy_rate": 0.27,
+          "occupancy_pct": 27,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "19": {
+          "occupancy_rate": 0.21,
+          "occupancy_pct": 21,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "20": {
+          "occupancy_rate": 0.19,
+          "occupancy_pct": 19,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "21": {
+          "occupancy_rate": 0.19,
+          "occupancy_pct": 19,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "22": {
+          "occupancy_rate": 0.19,
+          "occupancy_pct": 19,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "23": {
+          "occupancy_rate": 0.2,
+          "occupancy_pct": 20,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        }
+      },
+      "weekend": {
+        "0": {
+          "occupancy_rate": 0.16,
+          "occupancy_pct": 16,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "1": {
+          "occupancy_rate": 0.18,
+          "occupancy_pct": 18,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "2": {
+          "occupancy_rate": 0.19,
+          "occupancy_pct": 19,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "3": {
+          "occupancy_rate": 0.21,
+          "occupancy_pct": 21,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "4": {
+          "occupancy_rate": 0.22,
+          "occupancy_pct": 22,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "5": {
+          "occupancy_rate": 0.17,
+          "occupancy_pct": 17,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "6": {
+          "occupancy_rate": 0.18,
+          "occupancy_pct": 18,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "7": {
+          "occupancy_rate": 0.28,
+          "occupancy_pct": 28,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "8": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "9": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "10": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "11": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "12": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "13": {
+          "occupancy_rate": 0.3,
+          "occupancy_pct": 30,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "14": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "15": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "16": {
+          "occupancy_rate": 0.29,
+          "occupancy_pct": 29,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "17": {
+          "occupancy_rate": 0.28,
+          "occupancy_pct": 28,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "18": {
+          "occupancy_rate": 0.28,
+          "occupancy_pct": 28,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "19": {
+          "occupancy_rate": 0.22,
+          "occupancy_pct": 22,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "20": {
+          "occupancy_rate": 0.19,
+          "occupancy_pct": 19,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "21": {
+          "occupancy_rate": 0.19,
+          "occupancy_pct": 19,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "22": {
+          "occupancy_rate": 0.19,
+          "occupancy_pct": 19,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        },
+        "23": {
+          "occupancy_rate": 0.21,
+          "occupancy_pct": 21,
+          "demand_level": "LOW",
+          "turnover_minutes": 14.5,
+          "estimated_cruising_saved_mins": 3,
+          "recommended_mode": "CRUISING_PERMITTED",
+          "is_peak_hour": false,
+          "peak_window_label": "Low Demand Window"
+        }
+      }
+    }
+  }
+}

@@ -154,8 +154,8 @@ class ApiService {
             const address = addressParts.length > 0 ? addressParts.join(', ') : baseName;
 
             return {
-              id: props.osm_id ? `osm_${props.osm_id}` : `search_${idx}`,
-              placeId: props.osm_id ? `osm_${props.osm_id}` : `place_${idx}`,
+              id: props.osm_id ? `osm_${props.osm_id}_${idx}` : `search_${idx}`,
+              placeId: props.osm_id ? `osm_${props.osm_id}_${idx}` : `place_${idx}`,
               name,
               address,
               latitude: coords[1],
@@ -245,6 +245,36 @@ class ApiService {
     return this.request('/api/v1/searcher/stop', {
       method: 'POST',
     });
+  }
+
+  async updateSearcherLocation(coords: { latitude: number; longitude: number }): Promise<any> {
+    return this.request('/api/v1/searcher/location', {
+      method: 'POST',
+      body: JSON.stringify(coords),
+    }).catch(() => {});
+  }
+
+  async getDemandForecast(params: {
+    latitude?: number;
+    longitude?: number;
+    destinationName?: string;
+  }): Promise<{
+    hubName: string;
+    occupancyRate: number;
+    demandLevel: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
+    turnoverMinutes: number;
+    isPeakHour: boolean;
+    recommendedMode: 'CRUISING_PERMITTED' | 'P2P_HANDOFF';
+    estimatedCruisingMinutesSaved: number;
+    peakWindowLabel?: string;
+  }> {
+    const queryParts: string[] = [];
+    if (params.latitude !== undefined) queryParts.push(`latitude=${params.latitude}`);
+    if (params.longitude !== undefined) queryParts.push(`longitude=${params.longitude}`);
+    if (params.destinationName) queryParts.push(`destinationName=${encodeURIComponent(params.destinationName)}`);
+    const qs = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+
+    return this.request(`/api/v1/gatekeeper/demand-forecast${qs}`);
   }
 
   // --- Matchmaker Endpoints ---

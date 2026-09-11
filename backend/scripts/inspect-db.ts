@@ -1,13 +1,15 @@
-const { Pool } = require('pg');
-const dotenv = require('dotenv');
+import { Pool } from 'pg';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import * as fs from 'fs';
 dotenv.config();
 
-async function inspectSystem() {
+export async function inspectDb(): Promise<void> {
   console.log('\n======================================================');
   console.log('       PARKLAH SYSTEM ACTIVITY & DATABASE LOGS        ');
   console.log('======================================================\n');
 
-  const cleanUrl = process.env.DATABASE_URL.replace('?sslmode=require', '').replace('&sslmode=require', '');
+  const cleanUrl = (process.env.DATABASE_URL || '').replace('?sslmode=require', '').replace('&sslmode=require', '');
   const pool = new Pool({ connectionString: cleanUrl, ssl: { rejectUnauthorized: false } });
 
   try {
@@ -18,7 +20,7 @@ async function inspectSystem() {
       ORDER BY created_at DESC 
       LIMIT 5;
     `);
-    console.log('👥 [USERS] Registered Drivers (' + usersRes.rows.length + ' found):');
+    console.log(`👥 [USERS] Registered Drivers (${usersRes.rows.length} found):`);
     if (usersRes.rows.length === 0) {
       console.log('   (No users found yet)');
     } else {
@@ -44,7 +46,9 @@ async function inspectSystem() {
     } else {
       walletsRes.rows.forEach((w, i) => {
         console.log(`   ${i + 1}. Driver: ${w.full_name || 'Driver'} (User: ${w.user_id})`);
-        console.log(`      Balance: ${w.currency} ${parseFloat(w.balance).toFixed(2)} (Locked in Escrow: ${w.currency} ${parseFloat(w.locked_balance).toFixed(2)})`);
+        console.log(
+          `      Balance: ${w.currency} ${parseFloat(w.balance).toFixed(2)} (Locked in Escrow: ${w.currency} ${parseFloat(w.locked_balance).toFixed(2)})`,
+        );
       });
     }
 
@@ -61,7 +65,9 @@ async function inspectSystem() {
     } else {
       txRes.rows.forEach((tx, i) => {
         const sign = parseFloat(tx.amount) >= 0 ? '+' : '';
-        console.log(`   ${i + 1}. [${tx.transaction_type}] ${sign}RM ${parseFloat(tx.amount).toFixed(2)} (Balance After: RM ${parseFloat(tx.balance_after).toFixed(2)})`);
+        console.log(
+          `   ${i + 1}. [${tx.transaction_type}] ${sign}RM ${parseFloat(tx.amount).toFixed(2)} (Balance After: RM ${parseFloat(tx.balance_after).toFixed(2)})`,
+        );
         console.log(`      Status: ${tx.status} | Date: ${new Date(tx.created_at).toLocaleString()}`);
       });
     }
@@ -74,16 +80,16 @@ async function inspectSystem() {
       const keys = await redis.keys('*');
       console.log(`   Total Active Redis Keys: ${keys.length}`);
       if (keys.length > 0) {
-        keys.slice(0, 10).forEach((k) => console.log(`   - ${k}`));
+        keys.slice(0, 10).forEach((k: string) => console.log(`   - ${k}`));
       } else {
         console.log('   (No active in-flight sessions or broadcasts at this instant)');
       }
       redis.disconnect();
-    } catch (rErr) {
+    } catch (rErr: any) {
       console.log(`   Redis check error: ${rErr.message}`);
     }
 
-    // 5. Anti-Abuse & Telemetry Integrity Audit
+    // 5. Anti-Abuse & Telemetry Integrity Audit Box
     console.log('\n============================================================');
     console.log('🛡️  PARKLAH ANTI-ABUSE & TELEMETRY INTEGRITY AUDIT');
     console.log('============================================================');
@@ -94,7 +100,7 @@ async function inspectSystem() {
     console.log('  [✓] GPS Dilution of Precision: PASS (Avg error: 9.2m)');
     console.log('  [✓] Abuse Contamination Risk : LOW (< 0.5%)');
     console.log('============================================================');
-  } catch (err) {
+  } catch (err: any) {
     console.error('Database inspection error:', err.message);
   } finally {
     await pool.end();
@@ -102,4 +108,6 @@ async function inspectSystem() {
   }
 }
 
-inspectSystem().catch(console.error);
+if (require.main === module) {
+  inspectDb().catch(console.error);
+}
