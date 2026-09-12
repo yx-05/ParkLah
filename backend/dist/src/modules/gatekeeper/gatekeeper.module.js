@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GatekeeperModule = void 0;
 const common_1 = require("@nestjs/common");
 const gatekeeper_service_1 = require("./application/services/gatekeeper.service");
+const demand_forecast_service_1 = require("./application/services/demand-forecast.service");
 const gatekeeper_evaluator_service_1 = require("./domain/services/gatekeeper-evaluator.service");
 const gatekeeper_controller_1 = require("./infrastructure/controllers/gatekeeper.controller");
 const google_maps_routing_port_1 = require("./domain/ports/google-maps-routing.port");
@@ -26,6 +27,7 @@ exports.GatekeeperModule = GatekeeperModule = __decorate([
         controllers: [gatekeeper_controller_1.GatekeeperController],
         providers: [
             gatekeeper_service_1.GatekeeperService,
+            demand_forecast_service_1.DemandForecastService,
             gatekeeper_evaluator_service_1.GatekeeperEvaluatorService,
             {
                 provide: google_maps_routing_port_1.GOOGLE_MAPS_ROUTING_PORT,
@@ -42,6 +44,7 @@ exports.GatekeeperModule = GatekeeperModule = __decorate([
         ],
         exports: [
             gatekeeper_service_1.GatekeeperService,
+            demand_forecast_service_1.DemandForecastService,
             gatekeeper_evaluator_service_1.GatekeeperEvaluatorService,
             google_maps_routing_port_1.GOOGLE_MAPS_ROUTING_PORT,
             searcher_spatial_repository_port_1.SEARCHER_SPATIAL_REPOSITORY_PORT,

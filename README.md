@@ -5,105 +5,22 @@
 [![Supabase PostGIS](https://img.shields.io/badge/Database-PostgreSQL%2016%20%2B%20PostGIS-336791?logo=postgresql&logoColor=white)](https://supabase.com/)
 [![Upstash Redis](https://img.shields.io/badge/Spatial%20Queue-Upstash%20Redis%207-DC382D?logo=redis&logoColor=white)](https://upstash.com/)
 [![LightGBM ONNX](https://img.shields.io/badge/ML%20Inference-LightGBM%20%2F%20ONNX%20Runtime-43B02A?logo=onnx&logoColor=white)](https://onnxruntime.ai/)
-[![Tests](https://img.shields.io/badge/Test%20Coverage-121%20Passing-success)](#)
+[![Tests](https://img.shields.io/badge/Test%20Coverage-134%20Passing-success)](#)
 
 > **ParkLah** is an AI-powered, peer-to-peer (P2P) parking handoff application designed for dense urban centers across Malaysia (such as Kuala Lumpur, Bangsar, and Mid Valley). By pairing drivers currently departing a parking stall (*Leavers*) with drivers actively cruising for a spot (*Searchers*), ParkLah eliminates 15–20 minutes of cruising time per trip, cuts urban carbon emissions, and rewards drivers with parking credits.
 
 ---
 
 ## 📑 Table of Contents
-1. [🏆 The 3–5 Minute Pitch Demo Masterplan (Script & Step-by-Step)](#-the-35-minute-pitch-demo-masterplan)
-2. [📱 Non-Technical Setup Guide (From Scratch)](#-non-technical-setup-guide-from-scratch)
+1. [📱 Non-Technical Setup Guide (From Scratch)](#-non-technical-setup-guide-from-scratch)
    - [Step 1: Install Git & Node.js](#step-1-install-git--nodejs-npm)
    - [Step 2: Clone the Project Repository](#step-2-clone-the-project-repository)
    - [Step 3: Setup & Launch the Backend Server](#step-3-setup--launch-the-backend-server)
    - [Step 4: Setup & Launch the Mobile App (Frontend)](#step-4-setup--launch-the-mobile-app-frontend)
-3. [📲 How to Run on Your Phone with Expo Go](#-how-to-run-on-your-phone-with-expo-go)
-4. [🤖 Running the Automated Live Simulation Bot for Pitch Demos](#-running-the-automated-live-simulation-bot-for-pitch-demos)
-5. [💡 Common Troubleshooting & FAQ](#-common-troubleshooting--faq)
-6. [🏗️ Technical Architecture Highlights](#-technical-architecture-highlights)
-
----
-
-## 🏆 The 3–5 Minute Pitch Demo Masterplan
-
-This section is your exact speaking script and live phone demonstration choreography for pitching to judges, investors, or hackathon audiences.
-
-```mermaid
-graph LR
-    A["👋 1. The Hook (30s)<br/>Urban Parking Pain"] --> B["🚗 2. The Leaver (45s)<br/>Broadcast Departure"]
-    B --> C["🧠 3. ML Matchmaker (60s)<br/>LightGBM & Handshake"]
-    C --> D["🗺️ 4. Turn-by-Turn (45s)<br/>Live Polyline Navigation"]
-    D --> E["📍 5. Arrival & Geofence (45s)<br/>30m Auto-Unlock"]
-    E --> F["💰 6. Financial Ledger (45s)<br/>Double-Entry Micro-Settlement"]
-```
-
-### **Act 1: The Urban Pain Hook (0:00 – 0:30)**
-* **Speaker:** *"Good morning/afternoon everyone. How many times have you circled Mid Valley or Bukit Bintang for 20 minutes, burning petrol and sanity just trying to find a single empty parking spot? In Malaysia alone, over 30% of downtown traffic congestion is caused strictly by drivers cruising for parking. Today, we're introducing **ParkLah** — the smart real-time parking exchange connecting drivers leaving a spot with drivers looking for one."*
-* **Visual Action:** Open the ParkLah app on your phone. Show the sleek branded splash screen with the floating ParkLah logo and pulsating glow loading up into the app.
-* **⚡ Instant Login Tip:** If you see the login screen, simply tap **"⚡ QUICK DEV LOGIN (BYPASS)"** — no typing or OTP required! You'll be logged in as a verified 5-star driver (`Dev Driver`) immediately.
-
----
-
-### **Act 2: The Departure Broadcast (0:30 – 1:15)**
-* **Speaker:** *"Imagine I am a driver finishing my coffee at Mid Valley and about to leave. Instead of pulling out and letting the spot go to random chance, I open ParkLah and monetize my departure."*
-* **Visual Action:**
-  1. Tap the **Leaver** tab (or the bottom navigation car icon).
-  2. Tap the big turquoise action button: **"I'm Leaving"**.
-  3. Show the departure options:
-     - Select **⚡ Instant (0s)** for immediate pull-out, or **3 min / 5 min** countdown.
-     - Choose vehicle details: e.g., *Silver Perodua Myvi (Plate #8892)*.
-     - Select landmark chip: *"Basement 1, Pillar B-14"*.
-  4. Tap **"Broadcast Spot"**.
-* **Speaker:** *"The app immediately enters radar broadcast mode, transmitting my spot coordinates and ETA to the ParkLah spatial matching engine."*
-
----
-
-### **Act 3: Intelligent ML Matchmaking (1:15 – 2:15)**
-* **Speaker:** *"Now, switch roles to our incoming Searcher driver cruising nearby."*
-* **Visual Action:**
-  1. Switch to the **Searcher** tab on the phone (or a second phone / web browser).
-  2. Point out the interactive hot-zone pins on the map (showing real-time occupancy probability and walking minutes).
-  3. Search for or select **"Mid Valley Megamall"**.
-  4. Show the **Distance Gatekeeper**: The app validates that the driver is within 3 km and under a 10-minute drive, unlocking the **"Start Matchmaking"** button.
-  5. Tap **"Start Matchmaking"**.
-  6. Within 2 to 5 seconds, an animated **Match Offer Modal** pops up on screen:
-     - *“Parking Spot Found! 250m away • 3 min ETA”*
-     - *“Driver: Ahmad (Silver Myvi • 8892)”*
-     - *“Match Quality Score: 96%”*
-     - *15-second countdown timer ticking down.*
-* **Speaker:** *"Under the hood, ParkLah's **Pharos Filter** discarded vehicles driving in opposite directions, and our calibrated **LightGBM Machine Learning model** calculated a 96% probability of a successful peer handoff. The Searcher has a 15-second handshake window to lock in the bay."*
-* **Visual Action:** Tap **"Accept Spot"**.
-
----
-
-### **Act 4: Live Turn-by-Turn Navigation & Geofence Verification (2:15 – 3:00)**
-* **Speaker:** *"The moment the spot is accepted, ParkLah snaps a dynamic turn-by-turn road polyline directly to the exact parking stall."*
-* **Visual Action:**
-  1. Show the vibrant road polyline tracking from the driver’s location straight to the parking stall.
-  2. Show the floating **Navigation HUD**: Distance remaining, ETA, and target stall details.
-  3. *(Optional)* Tap **"Launch External GPS"** to demonstrate instant 1-tap handoff to Google Maps, Waze, or Apple Maps for voice turn-by-turn while ParkLah monitors the geofence in the background!
-* **Speaker:** *"To prevent fraud and handshake abandonment, ParkLah continuously monitors high-frequency GPS telemetry against our proprietary 30-meter PostGIS spatial geofence."*
-
----
-
-### **Act 5: Arrival Verification & Financial Micro-Settlement (3:00 – 3:45)**
-* **Speaker:** *"When the Searcher enters the 30-meter geofence bubble, the arrival verification modal automatically triggers."*
-* **Visual Action:**
-  1. The **Arrival Verification Prompt** slides up: *"You have arrived at your reserved bay! Confirm parking?"*
-  2. Tap **"Parked Successfully 🎉"**.
-  3. An alert confirms: *“Parked Successfully! Handover confirmed. 50 points settled.”*
-  4. Tap the **Points** tab on the bottom navigation.
-  5. Point out the live updated balance and immutable double-entry transaction record:
-     - **Parking Bay Handover Fee:** `- 50 pts (RM 0.50)`
-     - Show the leaver’s reward: `+ 25 pts (RM 0.25)`
-     - Platform retained commission: `+ 25 pts (RM 0.25)`
-* **Speaker:** *"Notice how the ledger updated instantly via WebSockets with zero manual refreshing. Furthermore, if another non-app car took the spot, tapping 'Spot Taken by Someone Else' waives 100% of the charge (RM 0.00) and automatically reroutes the driver to an AI-predicted fallback spot."*
-
----
-
-### **Act 6: Business Model & Closing (3:45 – 4:00)**
-* **Speaker:** *"ParkLah captures a 50% gross margin on every peer handoff transaction (RM 0.25 platform margin per match). With over 8 million vehicle trips daily across Greater Kuala Lumpur, capturing just 1% of cruising journeys translates to thousands of daily handoffs and a cleaner, smoother city. Thank you! We are now open for questions."*
+2. [📲 How to Run on Your Phone with Expo Go](#-how-to-run-on-your-phone-with-expo-go)
+3. [🤖 Running the Automated Live Simulation Bot](#-running-the-automated-live-simulation-bot)
+4. [💡 Common Troubleshooting & FAQ](#-common-troubleshooting--faq)
+5. [🏗️ Technical Architecture Highlights](#-technical-architecture-highlights)
 
 ---
 
@@ -275,7 +192,7 @@ Expo will generate a secure public URL (via Cloudflare/Ngrok) that connects your
 
 ---
 
-## 🤖 Running the Automated Live Simulation Bot for Pitch Demos
+## 🤖 Running the Automated Live Simulation Bot
 
 During your pitch or demo, you might not have a second driver physically moving their car in the parking lot. We built an automated **Departure Simulation Bot** that broadcasts live coordinates so you can demonstrate the full matchmaking lifecycle reliably every single time!
 
@@ -322,9 +239,9 @@ You will see clean console output showing driver balances (MYR), completed match
   ```
 
 ### 4. Running the Automated Test Suites
-To verify that all 121 automated unit tests across frontend and backend pass:
+To verify that all 134 automated unit tests across frontend and backend pass:
 ```bash
-# Run Backend Tests (83 tests)
+# Run Backend Tests (96 tests)
 cd ~/Documents/ParkLah/backend
 npm test
 
@@ -339,11 +256,13 @@ npm test
 
 | Layer | Technology | Key Capabilities |
 | :--- | :--- | :--- |
-| **Mobile Frontend** | React Native (Expo SDK 54, React 19) | Universal iOS, Android, and Web rendering; Zustand state stores; Socket.io client; custom high-DPI Vector/Canvas overlays. |
+| **Mobile Frontend** | React Native (Expo SDK 54, React 19) | Universal iOS, Android, and Web rendering; Zustand state stores; Socket.io client; custom high-DPI Vector/Canvas overlays; dynamic AI Demand Forecast chips. |
 | **API & Gateway** | NestJS 10 (TypeScript) | Modular Clean Architecture, Guards, DTO Class Validation, WebSocket Event Gateway. |
 | **Spatial Database** | PostgreSQL 16 + PostGIS (Supabase) | Spatio-temporal `ST_DWithin`, `ST_Distance_Sphere`, GiST indexing, ACID financial transactions. |
 | **Real-time Queue** | Upstash Redis 7 | Sub-second geospatial tracking (`GEOADD`, `GEORADIUS`), active searcher leases, dynamic TTL keys. |
-| **Machine Learning** | LightGBM & ONNX Runtime Node | Pre-trained model (`parklah_matchmaker_v1.onnx`) evaluating multi-variate match quality (ETA, heading divergence, historical reliability). |
+| **Matchmaker ML** | LightGBM & ONNX Runtime Node | Pre-trained model (`parklah_matchmaker_v1.onnx`) evaluating multi-variate match quality (ETA, heading divergence, historical reliability). |
+| **AI Demand Forecaster** | LightGBM Regressor & Gatekeeper Service | DBKL land-use zoning calibration (`NIGHTLIFE`, `RETAIL_MALL`, `CAMPUS`, `RESIDENTIAL`), dynamic occupancy forecasting, and peak turnover chips. |
+| **Anti-Abuse Telemetry** | Isolation Forest & Telemetry Guard | Unsupervised anomaly detection, Doppler velocity sanity ($\le 140\text{ km/h}$), teleportation delta bounds ($\le 40\text{ m/s}$), and live audit CLI. |
 | **Financial Ledger** | Double-Entry Transaction Ledger | Idempotent micro-transactions: Searcher debit ($-\text{RM }0.50$), Leaver credit ($+\text{RM }0.25$), Platform commission ($+\text{RM }0.25$). |
 
 ---

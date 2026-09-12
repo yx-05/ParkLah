@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { GatekeeperService } from './application/services/gatekeeper.service';
+import { DemandForecastService } from './application/services/demand-forecast.service';
 import { GatekeeperEvaluatorService } from './domain/services/gatekeeper-evaluator.service';
 import { GatekeeperController } from './infrastructure/controllers/gatekeeper.controller';
 import { GOOGLE_MAPS_ROUTING_PORT } from './domain/ports/google-maps-routing.port';
@@ -15,6 +16,7 @@ import { AuthModule } from '../auth/auth.module';
   controllers: [GatekeeperController],
   providers: [
     GatekeeperService,
+    DemandForecastService,
     GatekeeperEvaluatorService,
     {
       provide: GOOGLE_MAPS_ROUTING_PORT,
@@ -31,6 +33,7 @@ import { AuthModule } from '../auth/auth.module';
   ],
   exports: [
     GatekeeperService,
+    DemandForecastService,
     GatekeeperEvaluatorService,
     GOOGLE_MAPS_ROUTING_PORT,
     SEARCHER_SPATIAL_REPOSITORY_PORT,

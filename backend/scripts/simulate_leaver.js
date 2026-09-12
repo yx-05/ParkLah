@@ -59,6 +59,9 @@ async function runLeaverSimulation() {
               activeSearcherId = parsed.searcherId;
               targetLng = parsed.currentCoords.longitude;
               targetLat = parsed.currentCoords.latitude;
+              // Refresh heartbeat so candidate discovery doesn't prune as STALE_GPS_HEARTBEAT (> 20s)
+              parsed.lastHeartbeat = new Date();
+              await redis.set(`searcher:state:${activeSearcherId}`, JSON.stringify(parsed), 'EX', 300);
               console.log(`\n🎯 Detected active scanning driver [${activeSearcherId}] at (${targetLat.toFixed(4)}, ${targetLng.toFixed(4)})!`);
               break;
             }

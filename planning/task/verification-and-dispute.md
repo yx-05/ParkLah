@@ -86,3 +86,17 @@ The **Verification, Handover & Dispute Subsystem** verifies vehicle arrival and 
     - Test Case 1: Successful parking confirmation invokes wallet settlement and marks match completed.
     - Test Case 2: "Spot Taken" report creates auto-resolved dispute, zeroes charge amount, invalidates spot, and invokes reroute.
   - **Acceptance Criteria:** 100% test pass rate.
+
+### Phase 7: Real-Time Telemetry Integrity & Anti-Abuse Guard (Pitch Day Enhancement)
+- [x] **Task 7.9: Telemetry Integrity & Anti-Abuse Guard (`TelemetryIntegrityService`)**
+  - **Files:** `backend/src/modules/verification/domain/services/telemetry-integrity.service.ts`, `backend/test/unit/verification/telemetry-integrity.service.spec.ts`, `backend/scripts/inspect_system_status.js`
+  - **Details:**
+    - Ingests pre-trained anomaly thresholds from `scripts/ml/fraud_model_metadata.json`.
+    - Evaluates driver GPS heartbeats against 4 kinematic anti-abuse rules:
+      1. Maximum velocity threshold: $\le 140\text{ km/h}$.
+      2. Teleportation delta sanity: $\Delta d / \Delta t \le 40\text{ m/s}$.
+      3. GPS Horizontal Accuracy bound: $\le 50\text{m}$.
+      4. Telemetry ping freshness: $\le 25\text{s}$.
+    - Integrates live security audit box into `npm run inspect` CLI.
+  - **Acceptance Criteria:** 6/6 unit tests passing in `telemetry-integrity.service.spec.ts`.
+

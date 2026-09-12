@@ -24,37 +24,81 @@ export class GoogleMapsRoutingAdapter implements IGoogleMapsRoutingPort {
   }
 
   async searchPlace(query: string, proximity?: LatLng): Promise<PlacePrediction[]> {
-    if (!this.apiKey) {
-      return this.fallbackAdapter.searchPlace(query, proximity);
+    const cleanQuery = query && query.trim().length > 0 ? query.trim() : 'Parking';
+
+    if (this.apiKey) {
+      try {
+        let url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
+          cleanQuery,
+        )}&key=${this.apiKey}`;
+        if (proximity) {
+          url += `&location=${proximity.latitude},${proximity.longitude}&radius=50000`;
+        }
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.status === 'OK' && Array.isArray(data.results) && data.results.length > 0) {
+          return data.results.map((p: any) => ({
+            placeId: p.place_id,
+            name: p.name || cleanQuery,
+            address: p.formatted_address || p.name || 'Selected Place',
+            latitude: p.geometry?.location?.lat ?? (proximity ? proximity.latitude : 3.1176),
+            longitude: p.geometry?.location?.lng ?? (proximity ? proximity.longitude : 101.6778),
+          }));
+        }
+      } catch (error) {
+        this.logger.error('Google Places Text Search failed, attempting Photon fallback:', error);
+      }
     }
 
+    // Free live geocoding fallback via Photon (OpenStreetMap / Komoot)
     try {
-      let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
-        query,
-      )}&components=country:my&key=${this.apiKey}`;
+      let photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(cleanQuery)}&limit=10`;
       if (proximity) {
-        url += `&location=${proximity.latitude},${proximity.longitude}&radius=50000`;
+        photonUrl += `&lat=${proximity.latitude}&lon=${proximity.longitude}`;
       }
 
-      const res = await fetch(url);
-      const data = await res.json();
+      const pRes = await fetch(photonUrl, {
+        headers: { 'User-Agent': 'ParkLah/1.0' },
+        signal: AbortSignal.timeout(4000),
+      });
 
-      if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-        this.logger.warn(`Google Places API returned status: ${data.status}`);
-        return this.fallbackAdapter.searchPlace(query, proximity);
+      if (pRes.ok) {
+        const pData: any = await pRes.json();
+        if (Array.isArray(pData.features) && pData.features.length > 0) {
+          return pData.features.map((f: any, idx: number) => {
+            const props = f.properties || {};
+            const coords = f.geometry?.coordinates || [101.6778, 3.1176];
+            const baseName = props.name || props.street || cleanQuery;
+            const area = props.district || props.city || props.street;
+            const name = area && !baseName.toLowerCase().includes(area.toLowerCase())
+              ? `${baseName} - ${area}`
+              : baseName;
+            const addressParts = [
+              props.street,
+              props.district,
+              props.city,
+              props.state,
+              props.country,
+            ].filter(Boolean);
+            const address = addressParts.length > 0 ? addressParts.join(', ') : baseName;
+
+            return {
+              placeId: props.osm_id ? `osm_${props.osm_id}` : `place_photon_${idx}`,
+              name,
+              address,
+              latitude: coords[1],
+              longitude: coords[0],
+            };
+          });
+        }
       }
-
-      return (data.predictions || []).map((p: any) => ({
-        placeId: p.place_id,
-        name: p.structured_formatting?.main_text || p.description,
-        address: p.description,
-        latitude: proximity ? proximity.latitude : 3.139,
-        longitude: proximity ? proximity.longitude : 101.6869,
-      }));
-    } catch (error) {
-      this.logger.error('Google Places Autocomplete failed, falling back to mock:', error);
-      return this.fallbackAdapter.searchPlace(query, proximity);
+    } catch (photonError) {
+      this.logger.warn('Photon geocoding fallback unreachable, falling back to mock locations:', photonError);
     }
+
+    return this.fallbackAdapter.searchPlace(cleanQuery, proximity);
   }
 
   async getDistanceAndEta(origin: LatLng, destination: LatLng): Promise<RouteMetrics> {

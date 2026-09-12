@@ -10,6 +10,7 @@ exports.VerificationAndDisputeModule = void 0;
 const common_1 = require("@nestjs/common");
 const verification_service_1 = require("./application/services/verification.service");
 const geofence_engine_1 = require("./domain/services/geofence.engine");
+const telemetry_integrity_service_1 = require("./domain/services/telemetry-integrity.service");
 const verification_controller_1 = require("./infrastructure/controllers/verification.controller");
 const dispute_repository_port_1 = require("./domain/ports/dispute-repository.port");
 const postgres_dispute_repository_1 = require("./infrastructure/adapters/postgres-dispute.repository");
@@ -35,6 +36,7 @@ exports.VerificationAndDisputeModule = VerificationAndDisputeModule = __decorate
         providers: [
             verification_service_1.VerificationService,
             geofence_engine_1.GeofenceEngine,
+            telemetry_integrity_service_1.TelemetryIntegrityService,
             {
                 provide: dispute_repository_port_1.DISPUTE_REPOSITORY_PORT,
                 useFactory: () => {
@@ -47,6 +49,7 @@ exports.VerificationAndDisputeModule = VerificationAndDisputeModule = __decorate
         exports: [
             verification_service_1.VerificationService,
             geofence_engine_1.GeofenceEngine,
+            telemetry_integrity_service_1.TelemetryIntegrityService,
             dispute_repository_port_1.DISPUTE_REPOSITORY_PORT,
         ],
     })

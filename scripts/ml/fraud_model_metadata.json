@@ -1,0 +1,126 @@
+{
+  "model_name": "ParkLah Driver Telemetry & Abuse Guard (Isolation Forest)",
+  "model_version": "isolation_forest_v1",
+  "exported_at": "2026-09-11T15:01:58Z",
+  "total_training_episodes": 12000,
+  "contamination_rate": 0.08,
+  "n_estimators": 120,
+  "feature_columns": [
+    "speed_kmh",
+    "acceleration_variance",
+    "horizontal_accuracy_meters",
+    "ping_staleness_seconds",
+    "teleport_jump_ratio",
+    "historical_cancellation_rate",
+    "unverified_claim_ratio"
+  ],
+  "decision_threshold": -0.50878,
+  "metrics": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0,
+    "accuracy": 1.0,
+    "decision_threshold": -0.50878,
+    "train_duration_sec": 0.205
+  },
+  "heuristic_guard_rules": {
+    "max_safe_speed_kmh": 140.0,
+    "max_position_delta_mps": 40.0,
+    "max_horizontal_accuracy_meters": 50.0,
+    "max_ping_staleness_seconds": 25.0,
+    "max_cancellation_rate": 0.6,
+    "max_teleport_jump_ratio": 0.1,
+    "max_unverified_claim_ratio": 0.25
+  },
+  "feature_statistics": {
+    "speed_kmh": {
+      "mean": 39.5681,
+      "std": 26.7464,
+      "min": 0.0644,
+      "max": 229.2219,
+      "p50": 35.9777,
+      "p95": 56.1099,
+      "p99": 195.7768,
+      "normal_mean": 35.9383,
+      "normal_p95": 51.5405,
+      "anom_mean": 81.3111
+    },
+    "acceleration_variance": {
+      "mean": 2.0477,
+      "std": 3.9759,
+      "min": 0.1045,
+      "max": 31.9322,
+      "p50": 1.2201,
+      "p95": 7.6972,
+      "p99": 24.7562,
+      "normal_mean": 1.2095,
+      "normal_p95": 1.9529,
+      "anom_mean": 11.6866
+    },
+    "horizontal_accuracy_meters": {
+      "mean": 12.7891,
+      "std": 18.6934,
+      "min": 3.0001,
+      "max": 159.8406,
+      "p50": 9.2848,
+      "p95": 28.0142,
+      "p99": 124.6052,
+      "normal_mean": 8.8674,
+      "normal_p95": 14.1937,
+      "anom_mean": 57.8879
+    },
+    "ping_staleness_seconds": {
+      "mean": 4.2061,
+      "std": 9.2323,
+      "min": 0.5001,
+      "max": 84.9825,
+      "p50": 2.7439,
+      "p95": 5.2049,
+      "p99": 65.1603,
+      "normal_mean": 2.6355,
+      "normal_p95": 4.5776,
+      "anom_mean": 22.2682
+    },
+    "teleport_jump_ratio": {
+      "mean": 0.0332,
+      "std": 0.1258,
+      "min": 0.0,
+      "max": 0.9494,
+      "p50": 0.0054,
+      "p95": 0.1874,
+      "p99": 0.7493,
+      "normal_mean": 0.005,
+      "normal_p95": 0.0095,
+      "anom_mean": 0.3575
+    },
+    "historical_cancellation_rate": {
+      "mean": 0.0761,
+      "std": 0.1359,
+      "min": 0.01,
+      "max": 0.98,
+      "p50": 0.0472,
+      "p95": 0.277,
+      "p99": 0.8569,
+      "normal_mean": 0.0441,
+      "normal_p95": 0.0743,
+      "anom_mean": 0.4446
+    },
+    "unverified_claim_ratio": {
+      "mean": 0.0533,
+      "std": 0.1327,
+      "min": 0.0,
+      "max": 0.9499,
+      "p50": 0.0219,
+      "p95": 0.2773,
+      "p99": 0.778,
+      "normal_mean": 0.0201,
+      "normal_p95": 0.0379,
+      "anom_mean": 0.4352
+    }
+  },
+  "quality_gate": {
+    "passed": true,
+    "target_metric": "f1_score >= 0.90",
+    "evaluated_f1": 1.0
+  }
+}

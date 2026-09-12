@@ -1013,3 +1013,26 @@ gantt
 3. **ONNX Runtime:** High-performance cross-platform inferencing engine enabling sub-millisecond execution inside Node.js.
 4. **Project OSRM:** Open Source Routing Machine for ultra-low latency ($<10\text{ms}$) batch matrix ETA calculations.
 5. **ParkLah Technical Specifications:** `planning/01_prd.md`, `planning/02_high-level-design.md`, `planning/03_detailed-design.md`.
+
+---
+
+## 14. Appendix: Complementary Pitch ML Subsystems
+
+### 14.1 Urban Land-Use Zoning Demand & Turnover Forecaster
+- **Training Script:** `scripts/ml/train_demand_forecaster.py`
+- **Output Artifact:** `scripts/ml/demand_model_metadata.json`
+- **Model Framework:** LightGBM / Scikit-learn Regression ($R^2 = 0.9938$, $\text{MAE} = 0.0123$)
+- **Architecture:** Predicts parking occupancy percentage and turnover pressure across Klang Valley commercial corridors based on 4 DBKL land-use zoning archetypes:
+  1. `NIGHTLIFE_ENTERTAINMENT` (Bukit Bintang, Bangsar Telawi): Lunch dining peak (12:00–14:30) and Friday/Saturday late-night surge (21:00–02:00) at 88% Critical Occupancy.
+  2. `RETAIL_MALL` (Mid Valley, Damansara Uptown): Daytime shopping peak (12:00–21:30) followed by steep post-10 PM closing drop to 30% Low Occupancy.
+  3. `CAMPUS_COMMUTER` (SS15 Subang Jaya): Heavy weekday daytime pressure (08:00–18:00) with moderate evening café turnover.
+  4. `RESIDENTIAL_LOCAL` (>2km from hubs): Off-corridor quiet streets with low commercial demand (15%–20%).
+- **Serving:** Evaluated in real-time by `DemandForecastService` (`GET /api/v1/gatekeeper/demand-forecast`) and rendered on the Searcher destination card.
+
+### 14.2 Isolation Forest Driver Telemetry & Abuse Anomaly Detector
+- **Training Script:** `scripts/ml/train_fraud_isolation_forest.py`
+- **Output Artifact:** `scripts/ml/fraud_model_metadata.json`
+- **Model Framework:** `sklearn.ensemble.IsolationForest` ($F_1 \ge 0.90$, contamination $= 0.08$)
+- **Features Evaluated:** `speed_kmh`, `acceleration_variance`, `horizontal_accuracy_meters`, `ping_staleness_seconds`, `teleport_jump_ratio`, `historical_cancellation_rate`, `unverified_claim_ratio`.
+- **Runtime Guard:** Enforced via `TelemetryIntegrityService` checking Doppler velocity ($\le 140\text{ km/h}$), teleportation distance jumps ($\le 40\text{ m/s}$), GPS dilution error ($\le 50\text{m}$), and ping staleness ($\le 25\text{s}$). Live audit report displayed in `npm run inspect`.
+
