@@ -92,3 +92,14 @@ The **Searcher & Distance Gatekeeper Subsystem** manages the Searcher's pre-matc
     - Test Case 4: Calling `startMatchmaking` when locked throws `GatekeeperLockedException (403)`.
     - Test Case 5: `startMatchmaking` when unlocked invokes Redis `GEOADD` and returns active session.
   - **Acceptance Criteria:** 100% test pass rate.
+
+### Phase 7: AI Urban Demand & Availability Forecasting (Pitch Day Enhancement)
+- [x] **Task 3.10: Demand Forecasting Service & Endpoint (`DemandForecastService`)**
+  - **Files:** `backend/src/modules/gatekeeper/application/services/demand-forecast.service.ts`, `backend/src/modules/gatekeeper/infrastructure/controllers/gatekeeper.controller.ts`, `backend/test/unit/gatekeeper/demand-forecast.service.spec.ts`
+  - **Endpoint:** `GET /api/v1/gatekeeper/demand-forecast?latitude=&longitude=&destinationName=`
+  - **Details:**
+    - Ingests pre-trained model metadata `scripts/ml/demand_model_metadata.json`.
+    - Implements DBKL urban land-use zoning archetypes (`NIGHTLIFE_ENTERTAINMENT`, `RETAIL_MALL`, `CAMPUS_COMMUTER`, `RESIDENTIAL_LOCAL`).
+    - Evaluates Friday/Saturday late-night surge for entertainment corridors (Bukit Bintang / Pavilion: 88% Critical), post-mall closing wind-down for retail hubs (Mid Valley after 22:00: 30% Low), and quiet residential zones (18% Low).
+  - **Acceptance Criteria:** 7/7 unit tests passing in `demand-forecast.service.spec.ts`.
+

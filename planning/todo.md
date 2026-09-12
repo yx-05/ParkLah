@@ -1,7 +1,7 @@
 # ParkLah Feature Roadmap & Implementation TODO
 
-**Last Updated:** 2026-08-31  
-**Status:** Queued for Implementation  
+**Last Updated:** 2026-09-12  
+**Status:** In Active Development / Pitch Ready  
 
 ---
 
@@ -103,4 +103,27 @@
   - `backend/src/modules/matchmaker/infrastructure/services/candidate-discovery.service.ts` (Pharos filter + OSRM routing + LightGBM inference)
   - `backend/src/modules/matchmaker/application/services/spatial-matchmaker.service.ts` (15s cascading lock waterfall, declined/timeout candidate exclusion)
   - End-to-end unit and integration verification (20/20 test suites, 82/82 tests passing).
+
+---
+
+## 5. Completed: AI Urban Demand Forecasting & Telemetry Anti-Abuse Guard
+- **Specifications:** `planning/pitch_ml_enhancement_task.md`
+- **Status:** Completed & Integrated (134 total passing tests)
+- [x] **Track 1: Python Offline Machine Learning Pipelines**
+  - `scripts/ml/train_fraud_isolation_forest.py` (12,000 synthetic interaction episodes, 7 features, $F_1 \ge 0.90$)
+  - `scripts/ml/train_demand_forecaster.py` (25,000 hourly observations, LightGBM / RF, $R^2 = 0.9938$, $\text{MAE} = 0.0123$)
+  - Output artifacts: `scripts/ml/fraud_model_metadata.json`, `scripts/ml/demand_model_metadata.json`
+- [x] **Track 2: Backend Demand Forecasting & Urban Zoning Engine**
+  - `backend/src/modules/gatekeeper/application/services/demand-forecast.service.ts` (DBKL land-use zoning calibration for Nightlife, Retail Malls, Campus, and Residential archetypes)
+  - `backend/src/modules/gatekeeper/infrastructure/controllers/gatekeeper.controller.ts` (Exposed `GET /api/v1/gatekeeper/demand-forecast`)
+  - Unit tests: `backend/test/unit/gatekeeper/demand-forecast.service.spec.ts` (7 tests passing)
+- [x] **Track 3: Real-Time Telemetry Integrity & Anti-Abuse Guard**
+  - `backend/src/modules/verification/domain/services/telemetry-integrity.service.ts` (Doppler velocity $\le 140\text{ km/h}$, teleportation delta $\le 40\text{ m/s}$, accuracy $\le 50\text{m}$, staleness $\le 25\text{s}$)
+  - `backend/scripts/inspect_system_status.js` & `inspect-db.ts` (Live CLI anti-abuse audit report in `npm run inspect`)
+  - Unit tests: `backend/test/unit/verification/telemetry-integrity.service.spec.ts` (6 tests passing)
+- [x] **Track 4: Mobile Client UX & Bugfixes**
+  - `frontend/parklah/src/app/(tabs)/searcher.tsx` (Interactive AI Demand Forecast destination card)
+  - `frontend/parklah/src/services/ApiService.ts` (Demand API + unique `osm_id` key deduplication)
+  - FlatList key collision bugfix in `searcher.tsx` and `DestinationSearchBar.tsx`
+
 
